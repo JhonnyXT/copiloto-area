@@ -1,112 +1,67 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, usePathname } from "next/navigation";
-import { ChevronsUpDown, FileBarChart, FileText, LayoutDashboard, LogOut, Search, UploadCloud, Zap } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { area } from "@/lib/demo-data";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { usePathname } from "next/navigation";
+import { Zap } from "lucide-react";
+import { BotonCerrarSesion, BotonTema } from "@/components/layout/acciones-cuenta";
+import { CommandPalette } from "@/components/layout/command-palette";
+import { esSeccionActiva, SECCIONES } from "@/components/layout/navegacion";
 import { authClient } from "@/lib/auth-client";
-
-const navPrincipal = [
-  { href: "/", label: "Resumen", icon: LayoutDashboard },
-  { href: "/indicadores/costo-onza", label: "Indicadores", icon: FileBarChart, match: "/indicadores" },
-  { href: "/informes", label: "Informes", icon: FileText },
-  { href: "/documentos", label: "Documentos", icon: Search },
-];
+import { area } from "@/lib/demo-data";
+import { cn } from "@/lib/utils";
 
 export function Sidebar({ className }: { className?: string }) {
   const pathname = usePathname();
-  const router = useRouter();
   const { data: sesion } = authClient.useSession();
   const nombre = sesion?.user.name ?? area.usuario;
-  const correo = sesion?.user.email ?? "";
-
-  async function salir() {
-    await authClient.signOut();
-    router.push("/entrar");
-    router.refresh();
-  }
 
   return (
-    <nav
-      aria-label="Principal"
-      className={cn("flex w-58 shrink-0 flex-col gap-5 border-r border-border px-3 py-4", className)}
-    >
-      <Link href="/" className="flex items-center gap-2.5 px-1.5 py-1">
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[7px] bg-primary text-on-primary">
+    <div className={cn("flex w-58 shrink-0 flex-col gap-5 overflow-y-auto border-r border-border p-3", className)}>
+      <Link href="/" className="flex items-center gap-2.5 rounded-lg px-1.5 pt-2">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-on-primary">
           <Zap className="h-4 w-4" aria-hidden fill="currentColor" strokeWidth={0} />
         </span>
-        <span className="text-[15px] font-semibold tracking-[-0.01em] text-fg">Copiloto</span>
+        <span className="flex flex-col leading-tight">
+          <span className="text-[15px] font-semibold tracking-[-0.01em] text-fg">Copiloto</span>
+          <span className="text-xs text-fg-3">{area.nombre}</span>
+        </span>
       </Link>
 
-      <button
-        type="button"
-        className="flex w-full items-center gap-2.5 rounded-lg border border-border bg-surface px-2.5 py-2 text-left hover:bg-surface-2"
-      >
-        <span className="flex min-w-0 flex-1 flex-col leading-tight">
-          <span className="truncate text-[13px] font-semibold text-fg">{area.nombre}</span>
-          <span className="truncate text-xs text-fg-3">Piloto · datos de ejemplo</span>
-        </span>
-        <ChevronsUpDown className="h-4 w-4 shrink-0 text-fg-3" aria-hidden strokeWidth={1.75} />
-      </button>
+      <CommandPalette />
 
-      <div className="flex flex-col gap-0.5">
-        <span className="mb-1 px-2.5 text-xs font-medium text-fg-3">General</span>
-        {navPrincipal.map((item) => {
-          const activo = item.match ? pathname.startsWith(item.match) : pathname === item.href;
-          const Icon = item.icon;
+      <nav aria-label="Principal" className="flex flex-1 flex-col gap-0.5">
+        {SECCIONES.map(({ href, label, icono: Icono, prefijo }) => {
+          const activa = esSeccionActiva(prefijo, pathname);
           return (
             <Link
-              key={item.href}
-              href={item.href}
-              aria-current={activo ? "page" : undefined}
+              key={href}
+              href={href}
+              aria-current={activa ? "page" : undefined}
               className={cn(
-                "flex h-9 items-center gap-2.5 rounded-lg px-2.5 text-sm font-medium text-fg-2 hover:bg-surface-2 hover:text-fg",
-                activo && "shadow-hover bg-surface text-fg",
+                "flex h-9 items-center gap-2.5 rounded-lg px-2.5 text-sm font-medium",
+                activa ? "bg-primary-soft text-primary-soft-fg" : "text-fg-2 hover:bg-hover hover:text-fg",
               )}
             >
-              <Icon className={cn("h-[18px] w-[18px] shrink-0", activo && "text-primary")} aria-hidden strokeWidth={1.75} />
-              {item.label}
+              <Icono className="h-[18px] w-[18px] shrink-0" aria-hidden strokeWidth={1.75} />
+              {label}
             </Link>
           );
         })}
+      </nav>
 
-        <span className="mb-1 mt-4 px-2.5 text-xs font-medium text-fg-3">Datos</span>
-        <Link
-          href="/documentos?cargar=1"
-          className="flex h-9 items-center gap-2.5 rounded-lg px-2.5 text-sm font-medium text-fg-2 hover:bg-surface-2 hover:text-fg"
-        >
-          <UploadCloud className="h-[18px] w-[18px] shrink-0" aria-hidden strokeWidth={1.75} />
-          Cargas de datos
-        </Link>
+      <div className="flex flex-col gap-0.5">
+        <BotonTema />
+        <BotonCerrarSesion />
+        <div className="mt-2 flex items-center gap-2.5 border-t border-border px-1.5 pt-3">
+          <span aria-hidden className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-soft text-[13px] font-semibold text-primary-soft-fg">
+            {nombre[0]}
+          </span>
+          <span className="flex min-w-0 flex-col leading-tight">
+            <span className="truncate text-[13px] font-semibold text-fg">{nombre}</span>
+            <span className="truncate text-xs text-fg-3">{area.rol}</span>
+          </span>
+        </div>
       </div>
-
-      <div className="flex-1" />
-
-      <div className="flex flex-col gap-2">
-        <span className="px-2.5 text-xs font-medium text-fg-3">Apariencia</span>
-        <ThemeToggle className="w-full" />
-      </div>
-
-      <div className="flex items-center gap-2 rounded-lg p-2">
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-soft text-[13px] font-semibold text-primary-soft-fg">
-          {nombre[0]}
-        </span>
-        <span className="flex min-w-0 flex-1 flex-col leading-tight">
-          <span className="truncate text-[13px] font-semibold text-fg">{nombre}</span>
-          <span className="truncate text-xs text-fg-3">{correo || area.rol}</span>
-        </span>
-        <button
-          type="button"
-          onClick={salir}
-          aria-label="Cerrar sesión"
-          title="Cerrar sesión"
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-fg-3 hover:bg-surface-2 hover:text-fg"
-        >
-          <LogOut className="h-4 w-4" aria-hidden strokeWidth={1.75} />
-        </button>
-      </div>
-    </nav>
+    </div>
   );
 }

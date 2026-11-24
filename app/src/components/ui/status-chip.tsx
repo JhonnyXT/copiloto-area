@@ -1,6 +1,6 @@
-import { Check, TrendingDown, TrendingUp, TriangleAlert } from "lucide-react";
+import { Check, CircleAlert, TriangleAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { Estado } from "@/lib/demo-data";
+import type { Estado } from "@/lib/indicadores/tipos";
 
 const estilos: Record<Estado, string> = {
   ok: "bg-ok-soft text-ok-fg",
@@ -10,8 +10,8 @@ const estilos: Record<Estado, string> = {
 
 const iconos: Record<Estado, React.ElementType> = {
   ok: Check,
-  warn: TriangleAlert,
-  risk: TrendingUp,
+  warn: CircleAlert,
+  risk: TriangleAlert,
 };
 
 const textoPorDefecto: Record<Estado, string> = {
@@ -42,9 +42,4 @@ export function StatusChip({
       {children ?? textoPorDefecto[estado]}
     </span>
   );
-}
-
-export function TrendArrow({ up, className }: { up: boolean; className?: string }) {
-  const Icon = up ? TrendingUp : TrendingDown;
-  return <Icon className={cn("h-3.5 w-3.5", className)} aria-hidden />;
 }

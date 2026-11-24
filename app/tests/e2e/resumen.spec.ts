@@ -22,8 +22,28 @@ test("el tooltip de la tendencia muestra la cifra de la semana al pasar el curso
   await expect(page.getByText(/frente a la meta/)).toBeVisible();
 });
 
-test("el enlace de una novedad lleva al detalle del indicador correcto", async ({ page }) => {
+test("un aviso de atención lleva al detalle de su indicador", async ({ page }) => {
   await page.goto("/");
-  await page.getByText("Costo por onza 3,8 % sobre la meta").click();
-  await expect(page).toHaveURL("/indicadores/costo-onza");
+  const aviso = page.getByRole("region", { name: "Requiere tu atención" }).getByRole("link").first();
+  const destino = await aviso.getAttribute("href");
+  await aviso.click();
+  await expect(page).toHaveURL(destino!);
+});
+
+test("el resumen cabe completo en un portátil, sin desplazarse", async ({ page, isMobile }) => {
+  test.skip(!!isMobile, "En celular el resumen sí se desplaza");
+  await page.setViewportSize({ width: 1440, height: 800 });
+  await page.goto("/");
+  await expect(page.getByRole("region", { name: "Indicadores de otras áreas" })).toBeInViewport({ ratio: 1 });
+  await expect(page.getByRole("button", { name: "Cerrar sesión" })).toBeInViewport({ ratio: 1 });
+  const sobrante = await page.locator("main").evaluate((main) => main.scrollHeight - main.clientHeight);
+  expect(sobrante).toBeLessThanOrEqual(0);
+});
+
+test("los números del eje se dibujan dentro del gráfico", async ({ page }) => {
+  await page.goto("/");
+  const panel = await page.getByRole("tabpanel").boundingBox();
+  const marca = await page.getByRole("tabpanel").locator(".tabular > span.absolute").first().boundingBox();
+  expect(marca!.x).toBeGreaterThanOrEqual(panel!.x);
+  expect(marca!.x + marca!.width).toBeLessThanOrEqual(panel!.x + panel!.width);
 });

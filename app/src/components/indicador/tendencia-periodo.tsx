@@ -2,22 +2,13 @@
 
 import * as React from "react";
 import { TrendChart } from "@/components/ui/trend-chart";
-import { cn } from "@/lib/utils";
-import type { Kpi } from "@/lib/demo-data";
+import { cn, formatNumber } from "@/lib/utils";
+import type { Kpi } from "@/lib/indicadores/tipos";
 
-export function IndicadorTendenciaPeriodo({
-  kpi,
-  esLimite,
-  decimales,
-}: {
-  kpi: Kpi;
-  esLimite?: boolean;
-  decimales: number;
-}) {
+export function IndicadorTendenciaPeriodo({ kpi }: { kpi: Kpi }) {
   const tiene26 = !!kpi.serie26;
   const [rango, setRango] = React.useState<12 | 26>(tiene26 ? 26 : 12);
   const serie = rango === 26 && kpi.serie26 ? kpi.serie26 : kpi.serie;
-  const primeraSemana = 48 - serie.length;
 
   return (
     <section className="rounded-xl border border-border bg-surface p-6">
@@ -33,7 +24,7 @@ export function IndicadorTendenciaPeriodo({
           </span>
           <span className="flex items-center gap-1.5 text-xs text-fg-2">
             <span aria-hidden className="h-0 w-3 border-t-2 border-dashed border-target" />
-            {esLimite ? "Límite" : "Meta"} {kpi.meta}
+            Meta {formatNumber(kpi.meta, kpi.decimales)}
           </span>
           {tiene26 && (
             <div role="group" aria-label="Periodo" className="flex gap-0.5 rounded-lg border border-border bg-surface-2 p-0.5">
@@ -60,12 +51,10 @@ export function IndicadorTendenciaPeriodo({
       <TrendChart
         serie={serie}
         meta={kpi.meta}
-        metaEsLimite={esLimite}
         unidad={kpi.unidad}
-        decimales={decimales}
+        decimales={kpi.decimales}
         mayorEsMejor={kpi.comparacion === "mayor-mejor"}
-        primeraSemana={primeraSemana}
-        height={260}
+        className="h-[300px]"
       />
     </section>
   );

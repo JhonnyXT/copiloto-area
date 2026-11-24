@@ -4,7 +4,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import * as Dialog from "@radix-ui/react-dialog";
 import { FileBarChart, MessageCircleQuestion, Search } from "lucide-react";
-import { kpis, preguntasDemo } from "@/lib/demo-data";
+import { accesosIndicadores, preguntasDemo } from "@/lib/demo-data";
 import { cn } from "@/lib/utils";
 
 interface Item {
@@ -16,7 +16,7 @@ interface Item {
 }
 
 function construirItems(): Item[] {
-  const deIndicadores: Item[] = kpis.map((k) => ({
+  const deIndicadores: Item[] = accesosIndicadores.map((k) => ({
     id: `kpi-${k.slug}`,
     label: k.nombre,
     hint: "Indicador",
@@ -33,7 +33,12 @@ function construirItems(): Item[] {
   return [...deIndicadores, ...deDocumentos];
 }
 
-export function CommandPalette({ className }: { className?: string }) {
+interface CommandPaletteProps {
+  compacta?: boolean;
+  className?: string;
+}
+
+export function CommandPalette({ compacta = false, className }: CommandPaletteProps) {
   const [abierto, setAbierto] = React.useState(false);
   const [query, setQuery] = React.useState("");
   const router = useRouter();
@@ -53,6 +58,7 @@ export function CommandPalette({ className }: { className?: string }) {
   }
 
   React.useEffect(() => {
+    if (compacta) return;
     function onKey(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
@@ -61,7 +67,7 @@ export function CommandPalette({ className }: { className?: string }) {
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [abierto]);
+  }, [abierto, compacta]);
 
   function ir(href: string) {
     setAbierto(false);
@@ -73,16 +79,20 @@ export function CommandPalette({ className }: { className?: string }) {
       <button
         type="button"
         onClick={() => manejarCambioAbierto(true)}
+        aria-label="Buscar"
         className={cn(
-          "flex h-[34px] w-80 max-w-full items-center gap-2 rounded-lg border border-border bg-surface-2 px-2.5 text-left text-[13px] text-fg-3 hover:border-border-strong",
+          "flex h-9 items-center gap-2.5 rounded-lg border border-border bg-surface text-sm text-fg-3 hover:border-border-strong hover:text-fg-2",
+          compacta ? "w-9 justify-center" : "w-full px-2.5",
           className,
         )}
       >
-        <Search className="h-4 w-4 shrink-0" aria-hidden strokeWidth={1.75} />
-        <span className="flex-1 truncate">Buscar o preguntar a tus documentos</span>
-        <kbd className="shrink-0 rounded-md border border-border-strong px-1.5 py-0.5 text-[11px] font-medium text-fg-3">
-          Ctrl K
-        </kbd>
+        <Search className="h-[18px] w-[18px] shrink-0" aria-hidden strokeWidth={1.75} />
+        {!compacta && (
+          <>
+            <span className="flex-1 text-left">Buscar</span>
+            <kbd className="font-sans text-xs text-fg-3">Ctrl K</kbd>
+          </>
+        )}
       </button>
 
       <Dialog.Root open={abierto} onOpenChange={manejarCambioAbierto}>

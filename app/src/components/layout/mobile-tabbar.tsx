@@ -2,15 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FileBarChart, FileText, LayoutDashboard, Search } from "lucide-react";
+import { esSeccionActiva, SECCIONES } from "@/components/layout/navegacion";
 import { cn } from "@/lib/utils";
-
-const tabs = [
-  { href: "/", label: "Resumen", icon: LayoutDashboard },
-  { href: "/indicadores/costo-onza", label: "Indicadores", icon: FileBarChart, match: "/indicadores" },
-  { href: "/informes", label: "Informes", icon: FileText },
-  { href: "/documentos", label: "Documentos", icon: Search },
-];
 
 export function MobileTabbar() {
   const pathname = usePathname();
@@ -19,9 +12,9 @@ export function MobileTabbar() {
       aria-label="Principal"
       className="fixed inset-x-0 bottom-0 z-40 flex border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] md:hidden"
     >
-      {tabs.map((tab) => {
-        const activo = tab.match ? pathname.startsWith(tab.match) : pathname === tab.href;
-        const Icon = tab.icon;
+      {SECCIONES.map((tab) => {
+        const activo = esSeccionActiva(tab.prefijo, pathname);
+        const Icon = tab.icono;
         return (
           <Link
             key={tab.href}

@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import type { Estado } from "@/lib/demo-data";
+import type { Estado } from "@/lib/indicadores/tipos";
 
 const colorRelleno: Record<Estado, string> = {
   ok: "bg-ok",

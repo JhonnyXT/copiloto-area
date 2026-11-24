@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { ChevronLeft, ChevronRight, ExternalLink, File, Search, SearchX, Send, UploadCloud } from "lucide-react";
+import { BotonProximamente } from "@/components/ui/boton-proximamente";
 import { cn, formatDate } from "@/lib/utils";
 import { documentos, preguntasDemo, preguntasSugeridas, type DocCita } from "@/lib/demo-data";
 
@@ -84,20 +85,29 @@ export function BuscadorDemo() {
           <input
             id="pregunta"
             type="text"
+            disabled
             placeholder="Escribe tu pregunta, por ejemplo: ¿quién aprueba un permiso de trabajo en altura?"
-            className="h-10 flex-1 bg-transparent text-[15px] outline-none placeholder:text-fg-3"
+            title="Próximamente: escribe cualquier pregunta y el buscador responde con IA"
+            className="h-10 flex-1 cursor-not-allowed bg-transparent text-[15px] outline-none placeholder:text-fg-3"
           />
-          <button type="button" className="flex h-9 items-center gap-2 rounded-lg bg-primary px-3.5 text-sm font-semibold text-on-primary hover:bg-primary-hover">
+          <BotonProximamente
+            paraQueSirve="responde tu pregunta buscando en todos los documentos"
+            className="h-9 rounded-lg bg-primary px-3.5 text-sm font-semibold text-on-primary"
+          >
             <Send className="h-4 w-4" aria-hidden strokeWidth={1.75} />
             Preguntar
-          </button>
+          </BotonProximamente>
         </div>
         <div className="-mt-3 flex flex-wrap items-center gap-2">
           <span className="text-xs text-fg-3">Prueba con:</span>
-          {preguntasSugeridas.map((s) => (
-            <button key={s} type="button" className="flex h-[30px] items-center rounded-full border border-border bg-surface px-3 text-[13px] text-fg-2 hover:border-border-strong hover:text-fg">
-              {s}
-            </button>
+          {preguntasSugeridas.map((sugerencia) => (
+            <BotonProximamente
+              key={sugerencia}
+              paraQueSirve="escribe esta pregunta y la envía"
+              className="h-[30px] rounded-full border border-border bg-surface px-3 text-[13px] text-fg-2"
+            >
+              {sugerencia}
+            </BotonProximamente>
           ))}
         </div>
       </section>
@@ -113,12 +123,20 @@ export function BuscadorDemo() {
                 </span>
               </div>
               <div className="flex shrink-0 gap-1">
-                <button type="button" aria-label="Página anterior" className="flex h-8 w-8 items-center justify-center rounded-lg border border-border-strong hover:bg-surface-2">
+                <BotonProximamente
+                  aria-label="Página anterior"
+                  paraQueSirve="va a la página anterior del documento"
+                  className="h-8 w-8 justify-center rounded-lg border border-border-strong"
+                >
                   <ChevronLeft className="h-4 w-4" aria-hidden strokeWidth={1.75} />
-                </button>
-                <button type="button" aria-label="Página siguiente" className="flex h-8 w-8 items-center justify-center rounded-lg border border-border-strong hover:bg-surface-2">
+                </BotonProximamente>
+                <BotonProximamente
+                  aria-label="Página siguiente"
+                  paraQueSirve="va a la página siguiente del documento"
+                  className="h-8 w-8 justify-center rounded-lg border border-border-strong"
+                >
                   <ChevronRight className="h-4 w-4" aria-hidden strokeWidth={1.75} />
-                </button>
+                </BotonProximamente>
               </div>
             </div>
             <div className="bg-surface-2 p-5">
@@ -211,22 +229,22 @@ function FuenteBoton({
   );
 }
 
-export function EncabezadoDocumentos() {
+export function AccionesDocumentos() {
   return (
-    <div className="flex flex-wrap items-end justify-between gap-4">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-[-0.015em] text-fg">Pregúntale a tus documentos</h1>
-        <p className="text-sm text-fg-2">Responde solo con lo que está en ellos y cita el documento y la página. Si no lo encuentra, te lo dice.</p>
-      </div>
-      <div className="flex flex-wrap gap-2">
-        <button type="button" className="flex h-9 items-center gap-2 rounded-lg border border-border-strong bg-surface px-3.5 text-sm font-medium hover:bg-surface-2">
-          Todos los documentos ({documentos.total})
-        </button>
-        <button type="button" className="flex h-9 items-center gap-2 rounded-lg border border-border-strong bg-surface px-3.5 text-sm font-medium hover:bg-surface-2">
-          <UploadCloud className="h-[18px] w-[18px]" aria-hidden strokeWidth={1.75} />
-          Subir documentos
-        </button>
-      </div>
-    </div>
+    <>
+      <BotonProximamente
+        paraQueSirve="muestra la lista completa de documentos cargados"
+        className="h-9 rounded-lg px-3.5 text-sm font-medium text-fg-2"
+      >
+        Todos los documentos ({documentos.total})
+      </BotonProximamente>
+      <BotonProximamente
+        paraQueSirve="sube tus propios documentos para que el buscador los use"
+        className="h-9 rounded-lg border border-border-strong bg-surface px-3.5 text-sm font-medium"
+      >
+        <UploadCloud className="h-[18px] w-[18px]" aria-hidden strokeWidth={1.75} />
+        Subir documentos
+      </BotonProximamente>
+    </>
   );
 }

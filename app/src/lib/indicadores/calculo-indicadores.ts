@@ -1,16 +1,16 @@
 import type { ComparacionIndicador } from "@/db/schema";
-import type { Estado } from "@/lib/demo-data";
 import { formatNumber, formatSigned } from "@/lib/utils";
+import type { Estado } from "./tipos";
 
-const comparacionEsMejorMayor = (comparacion: ComparacionIndicador) => comparacion === "mayor_mejor";
+const TOLERANCIA_ANTES_DE_RIESGO = 0.05;
 
 export function calcularEstado(valorActual: number, meta: number, comparacion: ComparacionIndicador): Estado {
-  const cumplimiento = meta === 0 ? (valorActual === 0 ? 1 : 0) : valorActual / meta;
-  const favorable = comparacionEsMejorMayor(comparacion) ? cumplimiento >= 1 : cumplimiento <= 1;
-  if (favorable) return "ok";
+  const cumpleMeta = comparacion === "mayor_mejor" ? valorActual >= meta : valorActual <= meta;
+  if (cumpleMeta) return "ok";
+  if (meta === 0) return "risk";
 
-  const desviacion = Math.abs(cumplimiento - 1);
-  return desviacion <= 0.05 ? "warn" : "risk";
+  const desviacion = Math.abs(valorActual - meta) / meta;
+  return desviacion <= TOLERANCIA_ANTES_DE_RIESGO ? "warn" : "risk";
 }
 
 export function calcularCaption(
@@ -20,9 +20,10 @@ export function calcularCaption(
   unidad: string,
   decimales: number,
 ): string {
-  const prefijoMeta = comparacion === "menor_mejor" ? "Meta ≤ " : "Meta ";
-  const variacionPct = meta === 0 ? 0 : ((valorActual - meta) / meta) * 100;
-  return `${prefijoMeta}${formatNumber(meta, decimales)} ${unidad} · ${formatSigned(variacionPct, 1, " %")}`;
+  const prefijoMeta = comparacion === "menor_mejor" && meta !== 0 ? "Meta ≤ " : "Meta ";
+  const textoMeta = `${prefijoMeta}${formatNumber(meta, decimales)} ${unidad}`;
+  if (meta === 0) return textoMeta;
+  return `${textoMeta} · ${formatSigned(((valorActual - meta) / meta) * 100, 1, " %")}`;
 }
 
 export function calcularSubtituloTendencia(serie: number[], unidad: string, decimales: number): string {
@@ -30,7 +31,8 @@ export function calcularSubtituloTendencia(serie: number[], unidad: string, deci
   const actual = serie.at(-1)!;
   const anterior = serie.at(-2)!;
   const delta = actual - anterior;
-  if (delta === 0) return "Se mantuvo igual que la semana anterior.";
+  if (delta === 0) return "Igual que la semana anterior.";
   const direccion = delta > 0 ? "Subió" : "Bajó";
-  return `${direccion} ${formatNumber(Math.abs(delta), decimales)} ${unidad} frente a la semana anterior.`;
+  const unidadDelCambio = unidad.startsWith("%") ? "puntos" : unidad;
+  return `${direccion} ${formatNumber(Math.abs(delta), decimales)} ${unidadDelCambio} en la semana.`;
 }

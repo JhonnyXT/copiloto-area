@@ -1,14 +1,13 @@
 {
   "0": "relaciones.ts",
-  "1": "demo-data.ts",
-  "2": "lucide-react",
-  "3": "next",
+  "1": "cn",
+  "2": "sidebar.tsx",
+  "3": "pg@^8.23.1",
   "4": "generar-documentos.ts",
   "5": "devDependencies",
   "6": "dependencies",
   "7": "compilerOptions",
   "8": "package.json",
-  "9": "editor-informe.tsx",
   "10": "Copiloto de área · Plan técnico del piloto",
   "11": "@playwright/test",
   "12": "CLAUDE.md · Copiloto de área (piloto del cliente)",
@@ -17,6 +16,8 @@
   "15": "scripts",
   "16": "README.md",
   "17": "AGENTS.md",
-  "18": "class-variance-authority@^0.7.1",
-  "19": "preguntas-buscador-evaluacion.md"
+  "18": "cn",
+  "19": "preguntas-buscador-evaluacion.md",
+  "20": "layout.tsx",
+  "23": ".claude/CLAUDE.md"
 }

@@ -29,7 +29,7 @@ que instalar en un servidor, nada de Caddy ni Cloudflare proxy.
 - [ ] `.env.example` con las variables que va a necesitar el proyecto (sin valores reales).
 
 **Infraestructura Vercel (reemplaza al VPS para el piloto)**
-- [x] Proyecto Vercel enlazado (`copiloto-area-ferney`).
+- [x] Proyecto Vercel enlazado (`copiloto-area`).
 - [x] **Neon Postgres + pgvector** provisionado y conectado (extensión 0.8.7 habilitada).
 - [x] **Vercel Blob** privado provisionado y conectado (`copiloto-area-files`).
 - [x] `vercel env pull` hecho (`app/.env.local`, no se sube al repo).

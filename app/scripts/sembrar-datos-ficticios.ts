@@ -8,10 +8,12 @@ import { generarDocumentosFicticios } from "./lib/generar-documentos";
 
 const SEMILLA = 20261124;
 const TOTAL_SEMANAS = 60;
+const ULTIMO_LUNES = "2026-11-16";
+const FECHA_DE_CARGA = new Date("2026-11-22T18:40:00-05:00");
 
 async function sembrarIndicadores(organizacionId: string) {
   const db = getDb();
-  const calendario = generarCalendarioSemanal(TOTAL_SEMANAS, new Date());
+  const calendario = generarCalendarioSemanal(TOTAL_SEMANAS, ULTIMO_LUNES);
 
   for (const catalogo of CATALOGO_INDICADORES) {
     const [indicador] = await db
@@ -36,12 +38,13 @@ async function sembrarIndicadores(organizacionId: string) {
     await db.insert(mediciones).values(
       semanas.map((semana) => ({
         indicadorId: indicador.id,
-        periodoInicio: semana.periodoInicio.toISOString().slice(0, 10),
-        periodoFin: semana.periodoFin.toISOString().slice(0, 10),
+        periodoInicio: semana.periodoInicio,
+        periodoFin: semana.periodoFin,
         valor: String(semana.valor),
         meta: String(semana.meta),
-        archivoOrigen: catalogo.archivoOrigen,
+        archivoOrigen: semana.archivoOrigen,
         hojaOrigen: catalogo.hojaOrigen,
+        cargadoEn: FECHA_DE_CARGA,
       })),
     );
 

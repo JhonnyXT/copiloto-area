@@ -1,17 +1,18 @@
 # DESIGN.md · Copiloto de área (nombre del producto por definir)
 
-Guía visual del producto, **versión 2** (23 nov 2026). La leen Jonathan y los subagentes antes de
+Guía visual del producto, **versión 3** (24 nov 2026). La leen Jonathan y los subagentes antes de
 construir cualquier pantalla. Componentes base: **shadcn/ui + Tailwind**. Los tokens de abajo se
 vuelven variables CSS del tema. Referencia viva: el lienzo de maquetas en Claude
-(https://claude.ai/artifact/UL81vfeUS7SbS29t4CZtLY), donde cada pantalla funciona en Play.
+(https://claude.ai/artifact/UL81vfeUS7SbS29t4CZtLY). Desde la v3 el marco y el Resumen van por delante en
+código: el lienzo todavía muestra la v2 de esas dos piezas.
 
 ## 1. Tema y atmósfera
 - Debe transmitir **confianza y control**: una herramienta de trabajo para un líder de área de una
   empresa minera, que también se le muestra a un gerente general (a veces proyectada en una sala).
 - **Sobrio y preciso**, en la línea de las herramientas de trabajo serias (Linear, Vercel, Stripe):
   mucho aire, superficies planas, líneas finas, color solo donde comunica algo.
-- **Claro por defecto**, con modo oscuro real elegible por el usuario (control "Apariencia" en la
-  barra lateral; en celular, botón de sol/luna). Ambos temas usan los mismos roles de color.
+- **Claro por defecto**, con modo oscuro real elegible por el usuario (botón al pie de la barra
+  lateral; en celular, icono en la cabecera). Ambos temas usan los mismos roles de color.
 - El producto es **de Joblan**. No imitar la marca, el logo ni los colores de ninguna empresa real.
 
 ## 2. Paleta (contraste verificado con WCAG 2.1)
@@ -60,17 +61,16 @@ sin sombra en reposo. La sombra en capas suaves (`--shadow-pop`) es solo para lo
 tooltips, menús, popovers, modales. Radios: 8 px controles · 12 px superficies · píldora para chips.
 Espaciado en múltiplos de 4 px.
 
-- **Barra lateral (232 px):** marca (cuadro de 28 px + "Copiloto"), selector de área ("Área de
-  Operaciones · Piloto"), grupos "General" (Resumen, Indicadores, Informes, Documentos) y "Datos"
-  (Cargas de datos), y abajo "Apariencia" (control segmentado Claro | Oscuro) y la fila del usuario.
-  Ítem activo: superficie blanca con anillo de borde e icono en `--primary`.
-- **Barra superior (56 px):** ruta (Operaciones › Resumen), botón de búsqueda "Buscar o preguntar a
-  tus documentos" con `Ctrl K`, y a la derecha la frescura de los datos ("Datos al 22 nov, 6:40 p. m.").
+- **Barra lateral (232 px, fija a toda la altura):** marca con el nombre del área, "Buscar" (`Ctrl K`),
+  las 4 secciones y, al pie y siempre visibles, "Modo oscuro/claro", "Cerrar sesión" y el usuario.
+  Ítem activo: fondo `--primary-soft`. Solo entra aquí lo que funciona; nada de accesos duplicados.
+- **Cabecera:** título de la página (20 / 600), una línea de contexto, estado si aplica y las acciones
+  a la derecha. Es el único título de la pantalla; no hay ruta de navegación.
 - **Franja de datos de ejemplo (32 px):** fija arriba, no se puede cerrar.
 - **Botones (36 px):** principal (fondo `--primary`), secundario (superficie + `--border-strong`),
   fantasma (sin fondo). **Un solo botón principal por pantalla.** Deshabilitado: 45 % de opacidad.
 - **Chip de estado:** 22 px, fondo suave + texto del mismo rol + icono SVG (check · círculo con
-  exclamación · flecha arriba). Textos: "En meta", "Atención", "En riesgo".
+  exclamación · triángulo con exclamación). Textos: "En meta", "Atención", "En riesgo".
 - **Franja de indicadores (patrón principal de Resumen):** una sola superficie dividida en 4 celdas
   con líneas de 1 px. Cada celda: nombre + chip de estado, cifra + unidad, **barra de avance contra
   la meta** (relleno del color del estado + marca vertical en la meta) y una línea de contexto. Las
@@ -79,8 +79,10 @@ Espaciado en múltiplos de 4 px.
 - **Gráfico de tendencia:** línea de 2 px + área con degradado (14 % → 0 %), cuadrícula de 4 líneas,
   meta punteada `--target`, punto en el último valor, eje Y con 4 marcas. Al pasar el cursor: línea
   guía, punto y tooltip con semana, valor y diferencia con la meta (verde o roja según convenga).
-- **Lista "Requiere tu atención":** icono de estado en cuadro de 28 px, título en negrita con la
-  cifra, una línea de explicación y un enlace de acción con flecha ("Ver análisis →").
+- **Lista "Requiere tu atención":** solo indicadores fuera de meta, calculados por el sistema (primero
+  los que están en riesgo). Cada fila: icono de estado, nombre, desviación y cambio de la semana; toda
+  la fila lleva al detalle. Si todo está en meta, lo dice.
+- **Otras áreas:** lista compacta con indicador, área y fecha a la izquierda; valor y cambio a la derecha.
 - **Tablas:** encabezado en `--surface-2`, celdas de 12 × 16 px, cifras a la derecha, cambio con
   flecha SVG + texto coloreado según si es bueno o malo para el área (no según si sube o baja).
 - **Informe:** barra de herramientas tipo documento con "Insertar cifra" (las cifras solo entran
@@ -93,12 +95,11 @@ Espaciado en múltiplos de 4 px.
   cercana marcada como "relacionado, no responde la pregunta".
 
 ## 5. Distribución
-- **Escritorio (≥ 1024 px):** barra lateral 232 px; contenido con ancho máximo de 1200 px
-  (1280 en Documentos), márgenes de 28 px y separación de 24 px entre bloques.
-- **Resumen:** título + semana (con flechas anterior/siguiente; siguiente deshabilitada en la
-  semana actual) y "Generar informe semanal" → una frase de estado con chips (2 en meta · 1
-  atención · 1 en riesgo) → franja de indicadores → gráfico (2/3) + "Requiere tu atención" (1/3) →
-  tabla de indicadores de otras áreas.
+- **Escritorio:** la página no se desplaza; si algo no cabe, se desplaza solo el contenido. Ancho
+  completo, márgenes de 20 px y separación de 16 px entre bloques.
+- **Resumen (≥ 1024 px):** dos columnas en una sola pantalla. Izquierda: indicadores (en una fila, o
+  2 × 2 si no caben) y el gráfico, que ocupa el alto restante. Derecha (320 px; 380 en pantallas
+  grandes): "Requiere tu atención" y "Indicadores de otras áreas". Debe caber completo en 1280 × 680.
 - **Detalle de indicador:** título + chip + definición → franja de cifras clave (semana, meta,
   semana anterior, promedio) → tendencia con 12/26 semanas → "Qué explica el cambio" (aporte de
   cada componente) + "Composición" → "Indicadores relacionados" + "De dónde sale esta cifra".

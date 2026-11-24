@@ -1,4 +1,5 @@
 import type { ComparacionIndicador } from "@/db/schema";
+import { numeroSemanaIso } from "@/lib/semanas";
 import { crearGeneradorDeterministico, numeroEntre, redondear } from "./rng";
 
 export interface CatalogoIndicador {
@@ -9,7 +10,7 @@ export interface CatalogoIndicador {
   orden: number;
   decimales: number;
   metaBase: number;
-  archivoOrigen: string;
+  prefijoArchivo: string;
   hojaOrigen: string;
 }
 
@@ -22,7 +23,7 @@ export const CATALOGO_INDICADORES: readonly CatalogoIndicador[] = [
     orden: 1,
     decimales: 0,
     metaBase: 1250,
-    archivoOrigen: "indicadores_ejemplo.xlsx",
+    prefijoArchivo: "indicadores",
     hojaOrigen: "Producción",
   },
   {
@@ -33,7 +34,7 @@ export const CATALOGO_INDICADORES: readonly CatalogoIndicador[] = [
     orden: 2,
     decimales: 0,
     metaBase: 1100,
-    archivoOrigen: "indicadores_ejemplo.xlsx",
+    prefijoArchivo: "indicadores",
     hojaOrigen: "Costos",
   },
   {
@@ -44,7 +45,7 @@ export const CATALOGO_INDICADORES: readonly CatalogoIndicador[] = [
     orden: 3,
     decimales: 0,
     metaBase: 0,
-    archivoOrigen: "seguridad_ejemplo.xlsx",
+    prefijoArchivo: "seguridad",
     hojaOrigen: "Eventos",
   },
   {
@@ -55,100 +56,90 @@ export const CATALOGO_INDICADORES: readonly CatalogoIndicador[] = [
     orden: 4,
     decimales: 0,
     metaBase: 95,
-    archivoOrigen: "mantenimiento_ejemplo.xlsx",
+    prefijoArchivo: "mantenimiento",
     hojaOrigen: "Órdenes",
   },
 ];
 
-export interface SemanaGenerada {
-  indice: number;
-  periodoInicio: Date;
-  periodoFin: Date;
+export interface SemanaCalendario {
+  inicio: string;
+  fin: string;
+}
+
+export interface MedicionGenerada {
+  periodoInicio: string;
+  periodoFin: string;
   valor: number;
   meta: number;
+  archivoOrigen: string;
 }
 
-function lunesDeEstaSemana(fecha: Date): Date {
-  const copia = new Date(fecha);
-  const diaIso = (copia.getDay() + 6) % 7;
-  copia.setDate(copia.getDate() - diaIso);
-  copia.setHours(0, 0, 0, 0);
-  return copia;
+const DIAS_POR_SEMANA = 7;
+const TARIFA_ENERGIA_CENTRAL = 0.14;
+const COSTO_POR_PUNTO_DE_TARIFA = 2200;
+
+// Coinciden con las cifras fijas del informe y del desglose de costo (demo-data.ts): cambiar unas obliga a cambiar las otras.
+const CIERRE_POR_INDICADOR: Record<string, readonly number[]> = {
+  produccion: [1180, 1215, 1190, 1240, 1260, 1225, 1275, 1300, 1242, 1290, 1310, 1284],
+  "costo-onza": [1068, 1075, 1060, 1082, 1090, 1071, 1085, 1098, 1104, 1092, 1100, 1142],
+  mantenimiento: [96, 94, 93, 95, 97, 94, 92, 95, 93, 90, 91, 88],
+};
+const SEMANAS_CON_ACCIDENTE = new Set(["2025-12-08", "2026-03-16", "2026-06-29"]);
+
+function sumarDias(fechaIso: string, dias: number): string {
+  const fecha = new Date(`${fechaIso}T00:00:00Z`);
+  fecha.setUTCDate(fecha.getUTCDate() + dias);
+  return fecha.toISOString().slice(0, 10);
 }
 
-export function generarCalendarioSemanal(totalSemanas: number, fechaFin: Date): { inicio: Date; fin: Date }[] {
-  const ultimoLunes = lunesDeEstaSemana(fechaFin);
-  const semanas: { inicio: Date; fin: Date }[] = [];
-  for (let i = totalSemanas - 1; i >= 0; i--) {
-    const inicio = new Date(ultimoLunes);
-    inicio.setDate(inicio.getDate() - i * 7);
-    const fin = new Date(inicio);
-    fin.setDate(fin.getDate() + 6);
-    semanas.push({ inicio, fin });
+export function generarCalendarioSemanal(totalSemanas: number, ultimoLunes: string): SemanaCalendario[] {
+  return Array.from({ length: totalSemanas }, (_, i) => {
+    const inicio = sumarDias(ultimoLunes, (i - totalSemanas + 1) * DIAS_POR_SEMANA);
+    return { inicio, fin: sumarDias(inicio, DIAS_POR_SEMANA - 1) };
+  });
+}
+
+function generarOscilacion(azar: () => number, total: number, centro: number, amplitud: number): number[] {
+  let desvio = 0;
+  return Array.from({ length: total }, () => {
+    desvio = desvio * 0.7 + numeroEntre(azar, -amplitud, amplitud);
+    return centro + desvio;
+  });
+}
+
+function generarHistoria(slug: string, calendario: SemanaCalendario[], azar: () => number): number[] {
+  const total = calendario.length;
+  switch (slug) {
+    case "produccion":
+      return generarOscilacion(azar, total, 1215, 30);
+    case "costo-onza": {
+      const tarifas = generarOscilacion(azar, total, TARIFA_ENERGIA_CENTRAL, 0.01);
+      return tarifas.map((tarifa) => 1090 + (tarifa - TARIFA_ENERGIA_CENTRAL) * COSTO_POR_PUNTO_DE_TARIFA + numeroEntre(azar, -8, 8));
+    }
+    case "mantenimiento":
+      return generarOscilacion(azar, total, 94.5, 1.6).map((valor) => Math.min(100, valor));
+    case "seguridad":
+      return calendario.map(({ inicio }) => (SEMANAS_CON_ACCIDENTE.has(inicio) ? 1 : 0));
+    default:
+      throw new Error(`No hay generador para el indicador "${slug}".`);
   }
-  return semanas;
-}
-
-function generarSerieEnergia(totalSemanas: number, semilla: number): number[] {
-  const azar = crearGeneradorDeterministico(semilla);
-  const serie: number[] = [];
-  let tarifa = 0.12;
-  for (let i = 0; i < totalSemanas; i++) {
-    tarifa += numeroEntre(azar, -0.002, 0.004);
-    tarifa = Math.max(0.1, Math.min(0.18, tarifa));
-    serie.push(tarifa);
-  }
-  return serie;
 }
 
 export function generarMediciones(
   catalogo: CatalogoIndicador,
-  calendario: { inicio: Date; fin: Date }[],
+  calendario: SemanaCalendario[],
   semilla: number,
-): SemanaGenerada[] {
-  const azar = crearGeneradorDeterministico(semilla);
-  const totalSemanas = calendario.length;
-  const serieEnergia = generarSerieEnergia(totalSemanas, semilla * 7 + 1);
-
-  const valores: number[] = [];
-  let produccionBase = catalogo.metaBase * 0.96;
-  let mantenimientoBase = 94;
-
-  for (let i = 0; i < totalSemanas; i++) {
-    let valor: number;
-    switch (catalogo.slug) {
-      case "produccion": {
-        produccionBase += numeroEntre(azar, -15, 20);
-        produccionBase = Math.max(catalogo.metaBase * 0.75, Math.min(catalogo.metaBase * 1.15, produccionBase));
-        valor = produccionBase + numeroEntre(azar, -10, 10);
-        break;
-      }
-      case "costo-onza": {
-        const desviacionEnergia = (serieEnergia[i] - 0.14) * 2200;
-        valor = catalogo.metaBase + desviacionEnergia + numeroEntre(azar, -20, 20);
-        break;
-      }
-      case "seguridad": {
-        valor = azar() < 0.07 ? 1 : 0;
-        break;
-      }
-      case "mantenimiento": {
-        mantenimientoBase += numeroEntre(azar, -3, 2.2);
-        mantenimientoBase = Math.max(82, Math.min(98, mantenimientoBase));
-        valor = mantenimientoBase;
-        break;
-      }
-      default:
-        valor = catalogo.metaBase;
-    }
-    valores.push(redondear(valor, catalogo.decimales));
-  }
+): MedicionGenerada[] {
+  const cierre = CIERRE_POR_INDICADOR[catalogo.slug] ?? [];
+  const semanasDeHistoria = calendario.slice(0, calendario.length - cierre.length);
+  const historia = generarHistoria(catalogo.slug, semanasDeHistoria, crearGeneradorDeterministico(semilla));
+  const valores = [...historia, ...cierre];
 
   return calendario.map(({ inicio, fin }, i) => ({
-    indice: i,
     periodoInicio: inicio,
     periodoFin: fin,
-    valor: valores[i],
+    valor: redondear(valores[i], catalogo.decimales),
     meta: catalogo.metaBase,
+    archivoOrigen: `${catalogo.prefijoArchivo}_s${numeroSemanaIso(inicio)}_ejemplo.xlsx`,
   }));
 }

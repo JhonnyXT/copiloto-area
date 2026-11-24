@@ -1,185 +1,171 @@
 "use client";
 
 import * as React from "react";
+import { calcularEscala } from "@/lib/escala-grafico";
+import type { PuntoSerie } from "@/lib/indicadores/tipos";
 import { cn, formatNumber, formatSigned } from "@/lib/utils";
 
-const W = 600;
-const PAD_TOP = 14;
-const PAD_BOTTOM = 14;
+const ANCHO = 600;
+const ALTO = 200;
+const MAXIMO_ETIQUETAS = 6;
 
 interface TrendChartProps {
-  serie: number[];
+  serie: PuntoSerie[];
   meta: number;
-  metaEsLimite?: boolean;
   unidad: string;
-  decimales?: number;
+  decimales: number;
   mayorEsMejor: boolean;
-  primeraSemana: number;
-  height?: number;
   className?: string;
 }
 
-export function TrendChart({
-  serie,
-  meta,
-  metaEsLimite = false,
-  unidad,
-  decimales = 0,
-  mayorEsMejor,
-  primeraSemana,
-  height = 220,
-  className,
-}: TrendChartProps) {
-  const n = serie.length;
-  const gradId = React.useId();
+function indicesConEtiqueta(total: number): Set<number> {
+  const salto = Math.max(1, Math.ceil((total - 1) / (MAXIMO_ETIQUETAS - 1)));
+  const indices = new Set<number>();
+  for (let i = total - 1; i >= 0; i -= salto) indices.add(i);
+  return indices;
+}
+
+function desplazamientoEnBordes(indice: number, total: number): string {
+  if (indice === 0) return "0%";
+  return indice === total - 1 ? "-100%" : "-50%";
+}
+
+export function TrendChart({ serie, meta, unidad, decimales, mayorEsMejor, className }: TrendChartProps) {
+  const total = serie.length;
+  const gradienteId = React.useId();
   const [activo, setActivo] = React.useState<number | null>(null);
 
-  const { lo, hi } = React.useMemo(() => {
-    const todos = [...serie, meta];
-    const lo = Math.min(...todos);
-    const hi = Math.max(...todos);
-    const pad = (hi - lo) * 0.3 || 1;
-    return { lo: lo - pad, hi: hi + pad };
-  }, [serie, meta]);
-
-  const x = React.useCallback((i: number) => (i / (n - 1)) * W, [n]);
-  const y = React.useCallback(
-    (v: number) => PAD_TOP + (1 - (v - lo) / (hi - lo)) * (height - PAD_TOP - PAD_BOTTOM),
-    [lo, hi, height],
+  const escala = React.useMemo(
+    () => calcularEscala([...serie.map((punto) => punto.valor), meta], decimales),
+    [serie, meta, decimales],
   );
+  const etiquetados = React.useMemo(() => indicesConEtiqueta(total), [total]);
 
-  const linePath = serie.map((v, i) => `${i === 0 ? "M" : "L"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
-  const areaPath = `${linePath} L${W},${height} L0,${height} Z`;
-  const metaY = y(meta);
-  const metaPath = `M0 ${metaY.toFixed(1)}H${W}`;
+  const pctX = (indice: number) => (total > 1 ? (indice / (total - 1)) * 100 : 100);
+  const pctY = (valor: number) => (1 - (valor - escala.min) / (escala.max - escala.min)) * 100;
+  const coordX = (indice: number) => ((pctX(indice) / 100) * ANCHO).toFixed(1);
+  const coordY = (valor: number) => ((pctY(valor) / 100) * ALTO).toFixed(1);
 
-  const ticks = React.useMemo(() => {
-    const out: { top: number; label: string }[] = [];
-    for (let k = 0; k < 4; k++) {
-      const v = hi - (k * (hi - lo)) / 3;
-      out.push({ top: (y(v) / height) * 100, label: formatNumber(v, decimales) });
-    }
-    return out;
-  }, [hi, lo, y, height, decimales]);
-
-  const xLabels = React.useMemo(() => {
-    const pasos = Math.min(6, n);
-    const step = Math.max(1, Math.round((n - 1) / (pasos - 1)));
-    const labels: string[] = [];
-    for (let j = 0; j < pasos; j++) {
-      const idx = j === pasos - 1 ? n - 1 : j * step;
-      labels.push(`S${primeraSemana + idx}`);
-    }
-    return labels;
-  }, [n, primeraSemana]);
-
-  const hitInset = (-(100 / (n - 1)) / 2).toFixed(3) + "%";
-
-  const semanaActiva = activo !== null ? serie[activo] : null;
-  const diff = semanaActiva !== null ? semanaActiva - meta : null;
-  const esBueno = diff !== null ? (mayorEsMejor ? diff >= 0 : diff <= 0) : null;
-  const tx = activo === 0 ? "0%" : activo === n - 1 ? "-100%" : "-50%";
+  const linea = serie.map((punto, i) => `${i === 0 ? "M" : "L"}${coordX(i)},${coordY(punto.valor)}`).join(" ");
+  const ultimo = serie[total - 1];
 
   return (
-    <div className={cn("flex gap-3", className)}>
-      <div
-        aria-hidden
-        className="tabular flex shrink-0 flex-col justify-between text-[11px] text-fg-3"
-        style={{ width: 44, height, paddingBottom: 22 }}
-      >
-        {ticks.map((t) => (
-          <span key={t.label} className="relative text-right" style={{ position: "absolute", top: `${t.top}%`, right: 0, transform: "translateY(-50%)" }}>
-            {t.label}
+    <div className={cn("grid min-h-[200px] grid-cols-[auto_minmax(0,1fr)] grid-rows-[minmax(0,1fr)_auto] gap-x-3 gap-y-2.5 pt-2", className)}>
+      <div aria-hidden className="tabular relative text-xs text-fg-3">
+        <span className="invisible">{formatNumber(escala.max, decimales)}</span>
+        {escala.marcas.map((marca) => (
+          <span key={marca} className="absolute right-0 -translate-y-1/2" style={{ top: `${pctY(marca)}%` }}>
+            {formatNumber(marca, decimales)}
           </span>
         ))}
       </div>
 
-      <div className="flex min-w-0 flex-1 flex-col gap-2">
-        <div className="relative" style={{ height }} onMouseLeave={() => setActivo(null)}>
-          <svg
-            role="img"
-            aria-label={`Tendencia de ${n} semanas desde la semana ${primeraSemana}. Valor actual ${formatNumber(serie[n - 1], decimales)} ${unidad}; ${metaEsLimite ? "límite" : "meta"} ${formatNumber(meta, decimales)}.`}
-            viewBox={`0 0 ${W} ${height}`}
-            preserveAspectRatio="none"
-            className="absolute inset-0 h-full w-full overflow-visible"
-          >
-            <defs>
-              <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0" stopColor="var(--primary)" stopOpacity="0.14" />
-                <stop offset="1" stopColor="var(--primary)" stopOpacity="0" />
-              </linearGradient>
-            </defs>
-            {ticks.map((t) => (
-              <line key={t.label} x1={0} x2={W} y1={(t.top / 100) * height} y2={(t.top / 100) * height} stroke="var(--grid)" strokeWidth={1} vectorEffect="non-scaling-stroke" />
-            ))}
-            <path d={areaPath} fill={`url(#${gradId})`} />
-            <path d={metaPath} stroke="var(--target)" strokeWidth={1.5} strokeDasharray="5 4" fill="none" vectorEffect="non-scaling-stroke" />
-            <path d={linePath} stroke="var(--primary)" strokeWidth={2} fill="none" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
-          </svg>
+      <div className="relative" onMouseLeave={() => setActivo(null)}>
+        <svg
+          role="img"
+          aria-label={`Tendencia de ${total} semanas, de la ${serie[0].semana} a la ${ultimo.semana}. Valor actual ${formatNumber(ultimo.valor, decimales)} ${unidad}; meta ${formatNumber(meta, decimales)}.`}
+          viewBox={`0 0 ${ANCHO} ${ALTO}`}
+          preserveAspectRatio="none"
+          className="absolute inset-0 h-full w-full overflow-visible"
+        >
+          <defs>
+            <linearGradient id={gradienteId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="var(--primary)" stopOpacity="0.14" />
+              <stop offset="1" stopColor="var(--primary)" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          {escala.marcas.map((marca) => (
+            <line key={marca} x1={0} x2={ANCHO} y1={coordY(marca)} y2={coordY(marca)} stroke="var(--grid)" vectorEffect="non-scaling-stroke" />
+          ))}
+          <path d={`${linea} L${ANCHO},${ALTO} L0,${ALTO} Z`} fill={`url(#${gradienteId})`} />
+          <path d={`M0 ${coordY(meta)}H${ANCHO}`} stroke="var(--target)" strokeWidth={1.5} strokeDasharray="5 4" fill="none" vectorEffect="non-scaling-stroke" />
+          <path d={linea} stroke="var(--primary)" strokeWidth={2} fill="none" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+        </svg>
 
-          <span
-            aria-hidden
-            className="absolute h-2.5 w-2.5 rounded-full border-2 border-primary bg-surface"
-            style={{ left: `${(x(n - 1) / W) * 100}%`, top: `${(y(serie[n - 1]) / height) * 100}%`, marginLeft: -5, marginTop: -5 }}
+        <span
+          aria-hidden
+          className="absolute h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-primary bg-surface"
+          style={{ left: `${pctX(total - 1)}%`, top: `${pctY(ultimo.valor)}%` }}
+        />
+
+        {activo !== null && (
+          <DetalleSemana
+            punto={serie[activo]}
+            meta={meta}
+            unidad={unidad}
+            decimales={decimales}
+            mayorEsMejor={mayorEsMejor}
+            izquierda={pctX(activo)}
+            arriba={pctY(serie[activo].valor)}
+            desplazamiento={desplazamientoEnBordes(activo, total)}
           />
+        )}
 
-          {activo !== null && semanaActiva !== null && (
-            <>
-              <span
-                aria-hidden
-                className="absolute inset-y-0 w-px bg-border-strong"
-                style={{ left: `${(x(activo) / W) * 100}%` }}
-              />
-              <span
-                aria-hidden
-                className="absolute h-2.5 w-2.5 rounded-full bg-primary"
-                style={{
-                  left: `${(x(activo) / W) * 100}%`,
-                  top: `${(y(semanaActiva) / height) * 100}%`,
-                  marginLeft: -5,
-                  marginTop: -5,
-                  boxShadow: "0 0 0 3px var(--surface)",
-                }}
-              />
-              <div
-                className="tabular shadow-pop pointer-events-none absolute z-10 min-w-[150px] rounded-lg border border-border bg-surface px-2.5 py-2 text-xs leading-relaxed"
-                style={{
-                  left: `${(x(activo) / W) * 100}%`,
-                  top: `${(y(semanaActiva) / height) * 100}%`,
-                  transform: `translate(${tx}, calc(-100% - 12px))`,
-                }}
-              >
-                <div className="text-fg-3">Semana {primeraSemana + activo}</div>
-                <div className="text-sm font-semibold text-fg">
-                  {formatNumber(semanaActiva, decimales)} {unidad}
-                </div>
-                <div className={esBueno ? "text-ok-fg" : "text-risk-fg"}>
-                  {formatSigned(diff!, decimales)} {unidad} frente a {metaEsLimite ? "el límite" : "la meta"}
-                </div>
-              </div>
-            </>
-          )}
-
-          <div className="absolute inset-y-0 flex" style={{ left: hitInset, right: hitInset }}>
-            {serie.map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                tabIndex={-1}
-                aria-hidden
-                className="h-full flex-1 cursor-crosshair"
-                onMouseEnter={() => setActivo(i)}
-                onFocus={() => setActivo(i)}
-              />
-            ))}
-          </div>
-        </div>
-        <div className="tabular flex justify-between text-[11px] text-fg-3">
-          {xLabels.map((l) => (
-            <span key={l}>{l}</span>
+        <div aria-hidden className="absolute inset-y-0 flex" style={{ left: `${-50 / (total - 1 || 1)}%`, right: `${-50 / (total - 1 || 1)}%` }}>
+          {serie.map((punto, i) => (
+            <span key={punto.semana} className="h-full flex-1 cursor-crosshair" onMouseEnter={() => setActivo(i)} />
           ))}
         </div>
       </div>
+
+      <div aria-hidden className="tabular relative col-start-2 h-4 text-xs text-fg-3">
+        {serie.map(
+          (punto, i) =>
+            etiquetados.has(i) && (
+              <span
+                key={punto.semana}
+                className="absolute whitespace-nowrap"
+                style={{ left: `${pctX(i)}%`, transform: `translateX(${desplazamientoEnBordes(i, total)})` }}
+              >
+                Sem {punto.semana}
+              </span>
+            ),
+        )}
+      </div>
     </div>
+  );
+}
+
+interface DetalleSemanaProps {
+  punto: PuntoSerie;
+  meta: number;
+  unidad: string;
+  decimales: number;
+  mayorEsMejor: boolean;
+  izquierda: number;
+  arriba: number;
+  desplazamiento: string;
+}
+
+function DetalleSemana({ punto, meta, unidad, decimales, mayorEsMejor, izquierda, arriba, desplazamiento }: DetalleSemanaProps) {
+  const diferencia = punto.valor - meta;
+  const cumple = mayorEsMejor ? diferencia >= 0 : diferencia <= 0;
+  const cabeArriba = arriba > 45;
+
+  return (
+    <>
+      <span aria-hidden className="absolute inset-y-0 w-px bg-border-strong" style={{ left: `${izquierda}%` }} />
+      <span
+        aria-hidden
+        className="absolute h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary ring-[3px] ring-surface"
+        style={{ left: `${izquierda}%`, top: `${arriba}%` }}
+      />
+      <div
+        className="tabular shadow-pop pointer-events-none absolute z-10 whitespace-nowrap rounded-lg border border-border bg-surface px-3 py-2 text-xs leading-relaxed"
+        style={{
+          left: `${izquierda}%`,
+          top: `${arriba}%`,
+          transform: `translate(${desplazamiento}, ${cabeArriba ? "calc(-100% - 12px)" : "12px"})`,
+        }}
+      >
+        <div className="text-fg-3">Semana {punto.semana}</div>
+        <div className="text-sm font-semibold text-fg">
+          {formatNumber(punto.valor, decimales)} {unidad}
+        </div>
+        <div className={cumple ? "text-ok-fg" : "text-risk-fg"}>
+          {formatSigned(diferencia, decimales)} {unidad} frente a la meta
+        </div>
+      </div>
+    </>
   );
 }

@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { CircleCheckBig, FileDown, Info, RotateCcw } from "lucide-react";
+import { BotonProximamente } from "@/components/ui/boton-proximamente";
 import { StatusChip } from "@/components/ui/status-chip";
 import { cn } from "@/lib/utils";
 import { informeSemanal } from "@/lib/demo-data";
@@ -37,7 +38,7 @@ export function EditorInforme() {
 
         <div className="bg-surface px-6 py-10 sm:px-12">
           <div className="mx-auto max-w-[68ch] text-[15px] leading-7 text-fg">
-            <p className="tabular mb-1.5 text-[13px] text-fg-3">Área de Operaciones (ejemplo) · 17 al 23 de noviembre de 2026</p>
+            <p className="tabular mb-1.5 text-[13px] text-fg-3">Área de Operaciones (ejemplo) · 16 al 22 de noviembre de 2026</p>
             {/* No es un <h1>: la página ya tiene el suyo arriba; esto es el título visual del documento impreso. */}
             <p className="mb-5 text-[26px] font-semibold leading-tight tracking-[-0.02em] text-fg">Informe semanal de operaciones</p>
 
@@ -194,20 +195,28 @@ function PasoRevision({
 
 export function BotonesInforme() {
   return (
-    <div className="flex flex-wrap gap-2">
-      <button type="button" className="flex h-9 items-center gap-2 rounded-lg px-3.5 text-sm font-medium text-fg-2 hover:bg-surface-2 hover:text-fg">
+    <>
+      <BotonProximamente
+        paraQueSirve="la IA genera un borrador nuevo con los datos de esta semana"
+        className="h-9 rounded-lg px-3.5 text-sm font-medium text-fg-2"
+      >
         <RotateCcw className="h-[18px] w-[18px]" aria-hidden strokeWidth={1.75} />
         Volver a redactar
-      </button>
-      <button type="button" className="flex h-9 items-center gap-2 rounded-lg border border-border-strong bg-surface px-3.5 text-sm font-medium hover:bg-surface-2">
+      </BotonProximamente>
+      <BotonProximamente
+        paraQueSirve="descarga este informe en formato Word"
+        className="h-9 rounded-lg border border-border-strong bg-surface px-3.5 text-sm font-medium"
+      >
         <FileDown className="h-[18px] w-[18px]" aria-hidden strokeWidth={1.75} />
         Word
-      </button>
-      <button type="button" className="flex h-9 items-center gap-2 rounded-lg bg-primary px-3.5 text-sm font-semibold text-on-primary hover:bg-primary-hover">
+      </BotonProximamente>
+      <BotonProximamente
+        paraQueSirve="descarga este informe en PDF"
+        className="h-9 rounded-lg bg-primary px-3.5 text-sm font-semibold text-on-primary"
+      >
         <FileDown className="h-[18px] w-[18px]" aria-hidden strokeWidth={1.75} />
         Descargar PDF
-      </button>
-    </div>
+      </BotonProximamente>
+    </>
   );
 }
-

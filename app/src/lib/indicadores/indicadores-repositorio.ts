@@ -1,21 +1,23 @@
-import { asc, desc } from "drizzle-orm";
+import { asc, desc, lt } from "drizzle-orm";
 import { getDb } from "@/db";
 import { indicadores } from "@/db/schema";
-import type { Kpi } from "@/lib/demo-data";
-import { obtenerEditorial } from "./catalogo-editorial";
+import { fechaDeHoy, numeroSemanaIso } from "@/lib/semanas";
 import { calcularCaption, calcularEstado, calcularSubtituloTendencia } from "./calculo-indicadores";
+import { obtenerEditorial } from "./catalogo-editorial";
+import type { Kpi } from "./tipos";
 
 const SEMANAS_DETALLE = 26;
 const SEMANAS_RESUMEN = 12;
 
 export async function obtenerKpisDeOrganizacion(organizacionId: string): Promise<Kpi[]> {
-  const db = getDb();
+  const hoy = fechaDeHoy();
 
-  const filas = await db.query.indicadores.findMany({
+  const filas = await getDb().query.indicadores.findMany({
     where: (tabla, { eq }) => eq(tabla.organizacionId, organizacionId),
     orderBy: [asc(indicadores.orden)],
     with: {
       mediciones: {
+        where: (tabla) => lt(tabla.periodoFin, hoy),
         orderBy: (tabla) => [desc(tabla.periodoInicio)],
         limit: SEMANAS_DETALLE,
       },
@@ -25,14 +27,15 @@ export async function obtenerKpisDeOrganizacion(organizacionId: string): Promise
   return filas
     .filter((fila) => fila.mediciones.length > 0)
     .map((fila) => {
-      const medicionesOrdenadas = [...fila.mediciones].reverse();
-      const serieCompleta = medicionesOrdenadas.map((m) => Number(m.valor));
-      const serie26 = serieCompleta.length > SEMANAS_RESUMEN ? serieCompleta : undefined;
-      const serie = serieCompleta.slice(-SEMANAS_RESUMEN);
+      const mediciones = [...fila.mediciones].reverse();
+      const serieCompleta = mediciones.map((medicion) => ({
+        semana: numeroSemanaIso(medicion.periodoInicio),
+        valor: Number(medicion.valor),
+      }));
 
-      const ultimaMedicion = medicionesOrdenadas.at(-1)!;
-      const valorActual = Number(ultimaMedicion.valor);
-      const meta = Number(ultimaMedicion.meta);
+      const ultima = mediciones.at(-1)!;
+      const valorActual = Number(ultima.valor);
+      const meta = Number(ultima.meta);
       const editorial = obtenerEditorial(fila.slug);
 
       return {
@@ -46,22 +49,23 @@ export async function obtenerKpisDeOrganizacion(organizacionId: string): Promise
         estado: calcularEstado(valorActual, meta, fila.comparacion),
         valorActual,
         caption: calcularCaption(valorActual, meta, fila.comparacion, fila.unidad, editorial.decimales),
-        serie,
-        serie26,
+        periodo: { inicio: ultima.periodoInicio, fin: ultima.periodoFin },
+        serie: serieCompleta.slice(-SEMANAS_RESUMEN),
+        serie26: serieCompleta.length > SEMANAS_RESUMEN ? serieCompleta : undefined,
         tendencia: {
           titulo: editorial.tendenciaTitulo,
-          subtitulo: calcularSubtituloTendencia(serieCompleta, fila.unidad, editorial.decimales),
+          subtitulo: calcularSubtituloTendencia(
+            serieCompleta.map((punto) => punto.valor),
+            fila.unidad,
+            editorial.decimales,
+          ),
           leyenda: editorial.tendenciaLeyenda,
         },
         fuente: {
-          archivo: ultimaMedicion.archivoOrigen ?? "",
-          hoja: ultimaMedicion.hojaOrigen ?? "",
-          cargado: ultimaMedicion.cargadoEn.toISOString(),
+          archivo: ultima.archivoOrigen ?? "",
+          hoja: ultima.hojaOrigen ?? "",
+          cargado: ultima.cargadoEn.toISOString(),
         },
       } satisfies Kpi;
     });
-}
-
-export function obtenerMetaEsLimitePorSlug(kpis: Kpi[]): Record<string, boolean> {
-  return Object.fromEntries(kpis.map((kpi) => [kpi.slug, obtenerEditorial(kpi.slug).esLimite]));
 }
