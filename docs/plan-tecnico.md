@@ -71,15 +71,21 @@ datos (Drizzle), en español, aplicado a Neon". 10 tablas, migración aplicada, 
   "Pruebas", solo entran los correos que estén agregados ahí como "usuarios de prueba".
 
 **Generador de datos ficticios**
-- [ ] Script que genera 12-18 meses de indicadores (producción, costo, seguridad, mantenimiento) de
-  una empresa minera inventada, coherentes entre sí (el costo sube cuando sube la energía, etc.),
-  más 15-20 documentos PDF de ejemplo con contenido real de procedimientos mineros genéricos.
-- [ ] De aquí salen las ~15 preguntas con respuesta conocida para probar el buscador (sección 11 de
-  `CONTEXTO.md`).
+- [x] `app/scripts/sembrar-datos-ficticios.ts` (`npm run seed` en `app/`) carga en Neon 60 semanas
+  (~14 meses) de los 4 indicadores (producción, costo, seguridad, mantenimiento), generadas de forma
+  determinística y coherentes entre sí (el costo por onza sube cuando sube una tarifa de energía
+  simulada), más 13 documentos de ejemplo (152 páginas) con contenido de procedimientos mineros
+  genéricos. El script es idempotente: se puede volver a correr sin duplicar datos.
+- [x] De ahí salen 13 preguntas con respuesta conocida para evaluar el buscador, en
+  `docs/preguntas-buscador-evaluacion.md` (sección 11 de `CONTEXTO.md` pedía ~15; quedan pendientes
+  2-3 más si se amplía el banco de temas).
+- [ ] **Pendiente para Fase 3:** el `embedding` de cada fragmento quedó en `null` — generarlo requiere
+  `GEMINI_API_KEY`, que todavía no está configurada. El buscador real no puede activarse sin ese paso.
 
 **Criterio de "fase 0 terminada":** el frontend con las 4 pantallas corre en Vercel con datos
-ficticios, Neon tiene el esquema de base de datos creado y responde, y hay un generador de datos
-ficticios completo listo para cargar.
+ficticios, Neon tiene el esquema de base de datos creado y responde, y el generador de datos
+ficticios ya cargó indicadores/mediciones/documentos reales en Neon (el frontend sigue leyendo
+`lib/demo-data.ts` hasta la Fase 1, que lo conecta a estas tablas).
 
 ## Fase 1 · Tablero de indicadores (pista A, con ajuste pendiente de pista B)
 - Endpoint de carga de Excel/CSV (worker), validación con Zod, cálculo de tendencia y cumplimiento

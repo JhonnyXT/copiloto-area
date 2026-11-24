@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed": "dotenv -e .env.local -- tsx scripts/sembrar-datos-ficticios.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.2.1",
