@@ -35,3 +35,4 @@ docs/plan-negocio.md
 app/test-results/
 app/playwright-report/
 app/blob-report/
+graphify-out/cache/
