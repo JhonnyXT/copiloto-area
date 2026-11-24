@@ -55,10 +55,17 @@ que instalar en un servidor, nada de Caddy ni Cloudflare proxy.
 **Esquema de base de datos** — hecho, ver `app/src/db/schema/` y el commit "Esquema de base de
 datos (Drizzle), en español, aplicado a Neon". 10 tablas, migración aplicada, índice HNSW creado.
 
-**Auth**
-- [ ] Better Auth **dentro de Next.js** (Route Handlers, sin servidor Hono aparte), login con
-  Google, sesiones en la misma base de Neon.
-- [ ] Lista cerrada de correos permitidos (solo el cliente y Jonathan al inicio).
+**Auth** — hecho, falta solo las credenciales reales de Google (acción de Jonathan).
+- [x] Better Auth **dentro de Next.js** (Route Handlers en `/api/auth/[...all]`, sin servidor Hono
+  aparte), con la tabla `usuarios`/`sesiones`/`cuentas_oauth`/`verificaciones` ya en español
+  (`src/lib/auth.ts` mapea cada campo).
+- [x] Lista cerrada de correos permitidos vía `CORREOS_PERMITIDOS` (variable de entorno) — el que no
+  esté ahí, el login se rechaza aunque tenga una cuenta de Google válida.
+- [x] `src/proxy.ts` protege todas las páginas salvo `/entrar`; página de login en `/entrar`.
+- [ ] **Pendiente de Jonathan:** crear las credenciales de OAuth de Google (Google Cloud Console →
+  pantalla de consentimiento + ID de cliente OAuth, tipo "Aplicación web") y ponerlas como
+  `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` en Vercel. El URI de redirección a registrar en Google es
+  `https://<dominio-del-proyecto>/api/auth/callback/google`.
 
 **Generador de datos ficticios**
 - [ ] Script que genera 12-18 meses de indicadores (producción, costo, seguridad, mantenimiento) de

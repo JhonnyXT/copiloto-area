@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { ChevronsUpDown, FileBarChart, FileText, LayoutDashboard, MoreHorizontal, Search, UploadCloud, Zap } from "lucide-react";
+import { useRouter, usePathname } from "next/navigation";
+import { ChevronsUpDown, FileBarChart, FileText, LayoutDashboard, LogOut, Search, UploadCloud, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { area } from "@/lib/demo-data";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { authClient } from "@/lib/auth-client";
 
 const navPrincipal = [
   { href: "/", label: "Resumen", icon: LayoutDashboard },
@@ -16,6 +17,16 @@ const navPrincipal = [
 
 export function Sidebar({ className }: { className?: string }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { data: sesion } = authClient.useSession();
+  const nombre = sesion?.user.name ?? area.usuario;
+  const correo = sesion?.user.email ?? "";
+
+  async function salir() {
+    await authClient.signOut();
+    router.push("/entrar");
+    router.refresh();
+  }
 
   return (
     <nav
@@ -78,19 +89,24 @@ export function Sidebar({ className }: { className?: string }) {
         <ThemeToggle className="w-full" />
       </div>
 
-      <button
-        type="button"
-        className="flex w-full items-center gap-2.5 rounded-lg p-2 text-left hover:bg-surface-2"
-      >
+      <div className="flex items-center gap-2 rounded-lg p-2">
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-soft text-[13px] font-semibold text-primary-soft-fg">
-          {area.usuario[0]}
+          {nombre[0]}
         </span>
         <span className="flex min-w-0 flex-1 flex-col leading-tight">
-          <span className="truncate text-[13px] font-semibold text-fg">{area.usuario}</span>
-          <span className="truncate text-xs text-fg-3">{area.rol}</span>
+          <span className="truncate text-[13px] font-semibold text-fg">{nombre}</span>
+          <span className="truncate text-xs text-fg-3">{correo || area.rol}</span>
         </span>
-        <MoreHorizontal className="h-4 w-4 shrink-0 text-fg-3" aria-hidden />
-      </button>
+        <button
+          type="button"
+          onClick={salir}
+          aria-label="Cerrar sesión"
+          title="Cerrar sesión"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-fg-3 hover:bg-surface-2 hover:text-fg"
+        >
+          <LogOut className="h-4 w-4" aria-hidden strokeWidth={1.75} />
+        </button>
+      </div>
     </nav>
   );
 }

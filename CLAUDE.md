@@ -14,6 +14,9 @@ contenido es ficticio** — ningún dato real de la empresa entra nunca a este r
 - **Toda respuesta del buscador cita su fuente** (documento + página) o dice que no la encontró.
 - **La franja "Datos de ejemplo" va siempre visible**, sin botón para cerrarla.
 - **Nunca** datos reales de su empresa en código, commits, capturas o conversación con la IA.
+- **`E2E_BYPASS_AUTH` nunca va en Vercel ni en ningún `.env` desplegado.** Es solo para que
+  Playwright pruebe páginas protegidas sin poder hacer el login real con Google — ver
+  `app/src/proxy.ts` y `app/playwright.config.ts`.
 
 ## Stack del PILOTO (lo que se construye ahora) — 100 % Vercel, sin VPS
 - Frontend + backend: Next.js (App Router) + TypeScript + Tailwind + shadcn/ui, en `app/`, todo

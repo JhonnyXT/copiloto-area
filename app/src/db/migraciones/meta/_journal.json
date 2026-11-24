@@ -8,6 +8,13 @@
       "when": 1795490392363,
       "tag": "0000_esquema_inicial",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1795533523328,
+      "tag": "0001_agrega_verificaciones_y_campos_better_auth",
+      "breakpoints": true
     }
   ]
 }
