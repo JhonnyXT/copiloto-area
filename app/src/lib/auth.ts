@@ -75,7 +75,13 @@ export const auth = betterAuth({
     additionalFields: {
       // NOT NULL en la base de datos; nunca lo manda el cliente (input:
       // false) — lo resuelve el hook de abajo con obtenerOrganizacionPiloto().
-      organizacionId: { type: "string", required: true, input: false },
+      // required:false aquí a propósito: Better Auth valida los campos
+      // "required" ANTES de llamar al hook `before` de abajo (que es donde
+      // de verdad se rellena) — si quedaba en true, siempre fallaba con
+      // "organizacionId is required" sin llegar nunca al hook. La columna
+      // en la base de datos sigue siendo NOT NULL; el hook es quien
+      // garantiza un valor real antes de insertar.
+      organizacionId: { type: "string", required: false, input: false },
       rol: { type: "string", required: false, defaultValue: "lider_area" },
     },
   },

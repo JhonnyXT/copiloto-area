@@ -15,7 +15,7 @@ export function BotonEntrarConGoogle() {
   // parámetro de la URL de regreso (errorCallbackURL) y se deriva aquí
   // directamente del render, sin un efecto.
   const error = params.get("error")
-    ? "Este correo no está autorizado para entrar al piloto. Habla con Jonathan si crees que debería estarlo."
+    ? "Este correo no está autorizado para entrar al piloto. Si crees que deberías tener acceso, contacta al administrador."
     : errorLocal;
 
   async function entrar() {
