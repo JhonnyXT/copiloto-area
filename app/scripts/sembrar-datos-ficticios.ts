@@ -1,27 +1,13 @@
 import { writeFileSync } from "node:fs";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/db";
-import { organizaciones, indicadores, mediciones, documentos, fragmentosDocumento } from "@/db/schema";
+import { indicadores, mediciones, documentos, fragmentosDocumento } from "@/db/schema";
+import { obtenerOrganizacionPiloto } from "@/lib/organizacion-piloto";
 import { CATALOGO_INDICADORES, generarCalendarioSemanal, generarMediciones } from "./lib/generar-indicadores";
 import { generarDocumentosFicticios } from "./lib/generar-documentos";
 
 const SEMILLA = 20261124;
 const TOTAL_SEMANAS = 60;
-const NOMBRE_ORGANIZACION_PILOTO = "Operaciones (piloto)";
-
-async function obtenerOrganizacionPiloto() {
-  const db = getDb();
-  const existente = await db.query.organizaciones.findFirst({
-    where: eq(organizaciones.nombre, NOMBRE_ORGANIZACION_PILOTO),
-  });
-  if (existente) return existente;
-
-  const [creada] = await db
-    .insert(organizaciones)
-    .values({ nombre: NOMBRE_ORGANIZACION_PILOTO, esDatosDeEjemplo: true })
-    .returning();
-  return creada;
-}
 
 async function sembrarIndicadores(organizacionId: string) {
   const db = getDb();
@@ -119,14 +105,14 @@ function escribirPreguntasEvaluacion(preguntas: ReturnType<typeof generarDocumen
 
 async function main() {
   console.log("Sembrando datos ficticios del piloto…");
-  const organizacion = await obtenerOrganizacionPiloto();
-  console.log(`Organización: ${organizacion.nombre} (${organizacion.id})`);
+  const organizacionId = await obtenerOrganizacionPiloto();
+  console.log(`Organización: ${organizacionId}`);
 
   console.log("Indicadores y mediciones:");
-  await sembrarIndicadores(organizacion.id);
+  await sembrarIndicadores(organizacionId);
 
   console.log("Documentos:");
-  const preguntasEvaluacion = await sembrarDocumentos(organizacion.id);
+  const preguntasEvaluacion = await sembrarDocumentos(organizacionId);
   escribirPreguntasEvaluacion(preguntasEvaluacion);
   console.log(`  · docs/preguntas-buscador-evaluacion.md escrito (${preguntasEvaluacion.length} preguntas)`);
 

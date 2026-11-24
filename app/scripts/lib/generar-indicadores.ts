@@ -124,9 +124,8 @@ export function generarMediciones(
         break;
       }
       case "costo-onza": {
-        const costoEnergia = serieEnergia[i] * 2600;
-        const costoBase = catalogo.metaBase * 0.93;
-        valor = costoBase + costoEnergia * 0.55 + numeroEntre(azar, -15, 15);
+        const desviacionEnergia = (serieEnergia[i] - 0.14) * 2200;
+        valor = catalogo.metaBase + desviacionEnergia + numeroEntre(azar, -20, 20);
         break;
       }
       case "seguridad": {

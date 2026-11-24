@@ -5,19 +5,21 @@ import { AppShell } from "@/components/layout/app-shell";
 import { StatusChip } from "@/components/ui/status-chip";
 import { IndicadorTendenciaPeriodo } from "@/components/indicador/tendencia-periodo";
 import { formatDate, formatNumber, formatSigned } from "@/lib/utils";
-import { costoDesglose, kpis, metaEsLimite } from "@/lib/demo-data";
+import { costoDesglose } from "@/lib/demo-data";
+import { obtenerOrganizacionIdActual } from "@/lib/sesion-actual";
+import { obtenerKpisDeOrganizacion, obtenerMetaEsLimitePorSlug } from "@/lib/indicadores/indicadores-repositorio";
 
-export function generateStaticParams() {
-  return kpis.map((k) => ({ slug: k.slug }));
-}
+export const instant = false;
 
 export default async function IndicadorPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
+  const organizacionId = await obtenerOrganizacionIdActual();
+  const kpis = await obtenerKpisDeOrganizacion(organizacionId);
   const kpi = kpis.find((k) => k.slug === slug);
   if (!kpi) notFound();
 
-  const esLimite = metaEsLimite[kpi.slug];
-  const decimales = kpi.slug === "seguridad" ? 1 : 0;
+  const esLimite = obtenerMetaEsLimitePorSlug(kpis)[kpi.slug];
+  const decimales = kpi.decimales;
   const semanaAnterior = kpi.serie.at(-2) ?? kpi.valorActual;
   const diferenciaMeta = kpi.valorActual - kpi.meta;
   const promedio = kpi.serie.reduce((s, v) => s + v, 0) / kpi.serie.length;
@@ -57,7 +59,7 @@ export default async function IndicadorPage({ params }: { params: Promise<{ slug
         <section aria-label="Cifras clave" className="overflow-hidden rounded-xl border border-border bg-surface">
           <dl className="tabular grid gap-px bg-border" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
             <div className="flex flex-col gap-1 bg-surface p-5">
-              <dt className="text-xs font-medium text-fg-3">Semana {36 + kpi.serie.length - 1}</dt>
+              <dt className="text-xs font-medium text-fg-3">{formatDate(kpi.fuente.cargado)}</dt>
               <dd className="flex items-baseline gap-1.5">
                 <span className="text-[28px] font-semibold leading-none tracking-[-0.02em]">{formatNumber(kpi.valorActual, decimales)}</span>
                 <span className="text-[13px] text-fg-3">{kpi.unidad}</span>
@@ -193,7 +195,7 @@ export default async function IndicadorPage({ params }: { params: Promise<{ slug
                 <span className="text-primary">{kpi.fuente.archivo}</span>, hoja {kpi.fuente.hoja}
               </dd>
               <dt className="text-fg-3">Cargado</dt>
-              <dd className="tabular">{formatDate(kpi.fuente.cargado)}, por Carlos</dd>
+              <dd className="tabular">{formatDate(kpi.fuente.cargado)}</dd>
             </dl>
             <p className="mt-4 flex items-center gap-2 border-t border-border pt-3 text-[13px] font-medium text-ok-fg">
               <Check className="h-4 w-4" aria-hidden strokeWidth={2.5} />

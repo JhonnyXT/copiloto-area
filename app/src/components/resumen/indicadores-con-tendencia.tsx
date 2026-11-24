@@ -6,11 +6,11 @@ import { StatusChip } from "@/components/ui/status-chip";
 import { ProgressBullet } from "@/components/ui/progress-bullet";
 import { TrendChart } from "@/components/ui/trend-chart";
 import { cn, formatNumber } from "@/lib/utils";
-import { kpis, metaEsLimite, type Kpi } from "@/lib/demo-data";
+import type { Kpi } from "@/lib/demo-data";
 
 const PRIMERA_SEMANA = 36;
 
-export function IndicadoresConTendencia() {
+export function IndicadoresConTendencia({ kpis, metaEsLimite }: { kpis: Kpi[]; metaEsLimite: Record<string, boolean> }) {
   const [activoSlug, setActivoSlug] = React.useState<string>(kpis[0].slug);
   const activo = kpis.find((k) => k.slug === activoSlug) ?? kpis[0];
 

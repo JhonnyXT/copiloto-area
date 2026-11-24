@@ -3,18 +3,7 @@ import { nextCookies } from "better-auth/next-js";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { getDb } from "@/db";
 import * as schema from "@/db/schema";
-
-async function obtenerOrganizacionPiloto(): Promise<string> {
-  const db = getDb();
-  const organizacionExistente = await db.query.organizaciones.findFirst();
-  if (organizacionExistente) return organizacionExistente.id;
-
-  const [organizacionCreada] = await db
-    .insert(schema.organizaciones)
-    .values({ nombre: "Operaciones (piloto)", esDatosDeEjemplo: true })
-    .returning({ id: schema.organizaciones.id });
-  return organizacionCreada.id;
-}
+import { obtenerOrganizacionPiloto } from "@/lib/organizacion-piloto";
 
 function obtenerCorreosPermitidos(): string[] {
   return (process.env.CORREOS_PERMITIDOS ?? "")

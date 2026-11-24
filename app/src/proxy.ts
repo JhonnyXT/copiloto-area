@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionCookie } from "better-auth/cookies";
-
-const VALOR_BYPASS_SOLO_PRUEBAS = "solo-para-playwright-nunca-en-produccion";
+import { esBypassDePruebasActivo } from "@/lib/e2e-bypass";
 
 export function proxy(request: NextRequest) {
-  const esBypassDePruebas = process.env.E2E_BYPASS_AUTH === VALOR_BYPASS_SOLO_PRUEBAS;
-  if (esBypassDePruebas || getSessionCookie(request)) {
+  if (esBypassDePruebasActivo() || getSessionCookie(request)) {
     return NextResponse.next();
   }
 

@@ -84,14 +84,22 @@ datos (Drizzle), en español, aplicado a Neon". 10 tablas, migración aplicada, 
 
 **Criterio de "fase 0 terminada":** el frontend con las 4 pantallas corre en Vercel con datos
 ficticios, Neon tiene el esquema de base de datos creado y responde, y el generador de datos
-ficticios ya cargó indicadores/mediciones/documentos reales en Neon (el frontend sigue leyendo
-`lib/demo-data.ts` hasta la Fase 1, que lo conecta a estas tablas).
+ficticios ya cargó indicadores/mediciones/documentos reales en Neon. El tablero de indicadores ya
+lee esas tablas (ver Fase 1); informes y documentos siguen sobre `lib/demo-data.ts`.
 
 ## Fase 1 · Tablero de indicadores (pista A, con ajuste pendiente de pista B)
-- Endpoint de carga de Excel/CSV (worker), validación con Zod, cálculo de tendencia y cumplimiento
-  **en código, nunca en la IA**.
-- Conectar el frontend ya construido a la API real (hoy consume datos de ejemplo locales).
-- Pruebas unitarias de cada cálculo (cumplimiento, variación semana a semana, aporte al total).
+- [x] El resumen (`app/page.tsx`) y el detalle de indicador (`app/indicadores/[slug]/page.tsx`) ya
+  leen `indicadores`/`mediciones` de Neon en vez de `lib/demo-data.ts`, a través de
+  `src/lib/indicadores/indicadores-repositorio.ts` (consulta) +
+  `src/lib/indicadores/calculo-indicadores.ts` (estado, variación y texto de tendencia calculados
+  en código — la IA no escribe ninguna cifra) + `src/lib/indicadores/catalogo-editorial.ts`
+  (los únicos textos fijos: título/descr./leyenda de cada indicador, que no son cifras).
+  Siguen en `lib/demo-data.ts`, fuera de alcance de este paso: el desglose de costo
+  (`costoDesglose`), las novedades ("Requiere tu atención") y la tabla de otras áreas — no tienen
+  todavía un modelo de datos propio.
+- [ ] Endpoint de carga de Excel/CSV (worker), validación con Zod — hoy la carga es solo el script
+  `npm run seed` con datos ficticios; falta el endpoint real para cuando el cliente suba su archivo.
+- [ ] Pruebas unitarias de `calculo-indicadores.ts` (cumplimiento, variación semana a semana).
 - **Ajuste pendiente del cliente:** nombres y metas reales de sus indicadores (hoy: producción, costo
   por onza, seguridad, mantenimiento, como ejemplo representativo).
 

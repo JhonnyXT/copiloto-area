@@ -3,7 +3,9 @@ import { ChevronLeft, ChevronRight, FileText, Info, SquareCheck, TrendingDown, T
 import { AppShell } from "@/components/layout/app-shell";
 import { StatusChip } from "@/components/ui/status-chip";
 import { IndicadoresConTendencia } from "@/components/resumen/indicadores-con-tendencia";
-import { area, feed, indicadoresOtrasAreas } from "@/lib/demo-data";
+import { area, feed, indicadoresOtrasAreas, type Estado } from "@/lib/demo-data";
+import { obtenerOrganizacionIdActual } from "@/lib/sesion-actual";
+import { obtenerKpisDeOrganizacion, obtenerMetaEsLimitePorSlug } from "@/lib/indicadores/indicadores-repositorio";
 
 const iconoFeed = { ok: SquareCheck, warn: TriangleAlert, risk: TriangleAlert, info: Info };
 const colorFeed = {
@@ -13,7 +15,24 @@ const colorFeed = {
   info: "bg-info-soft text-info-fg",
 };
 
-export default function ResumenPage() {
+const etiquetaResumenEstado: Record<Estado, string> = {
+  ok: "en meta",
+  warn: "requiere atención",
+  risk: "en riesgo",
+};
+
+export const instant = false;
+
+export default async function ResumenPage() {
+  const organizacionId = await obtenerOrganizacionIdActual();
+  const kpis = await obtenerKpisDeOrganizacion(organizacionId);
+  const metaEsLimite = obtenerMetaEsLimitePorSlug(kpis);
+
+  const conteoPorEstado = kpis.reduce<Record<Estado, number>>(
+    (conteo, kpi) => ({ ...conteo, [kpi.estado]: conteo[kpi.estado] + 1 }),
+    { ok: 0, warn: 0, risk: 0 },
+  );
+
   return (
     <AppShell ruta={[{ label: "Operaciones" }, { label: "Resumen" }]}>
       <div className="mx-auto flex max-w-[1200px] flex-col gap-6 p-4 md:p-7">
@@ -41,12 +60,16 @@ export default function ResumenPage() {
 
         <p className="-mt-2 flex flex-wrap items-center gap-2 text-sm text-fg-2">
           <span>Esta semana:</span>
-          <StatusChip estado="ok">2 en meta</StatusChip>
-          <StatusChip estado="warn">1 requiere atención</StatusChip>
-          <StatusChip estado="risk">1 en riesgo</StatusChip>
+          {(["ok", "warn", "risk"] as const)
+            .filter((estado) => conteoPorEstado[estado] > 0)
+            .map((estado) => (
+              <StatusChip key={estado} estado={estado}>
+                {conteoPorEstado[estado]} {etiquetaResumenEstado[estado]}
+              </StatusChip>
+            ))}
         </p>
 
-        <IndicadoresConTendencia />
+        <IndicadoresConTendencia kpis={kpis} metaEsLimite={metaEsLimite} />
 
         <section aria-label="Requiere tu atención" className="rounded-xl border border-border bg-surface p-6">
           <div className="mb-3 flex items-center justify-between">
