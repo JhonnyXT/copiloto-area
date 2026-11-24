@@ -50,6 +50,16 @@ export const auth = betterAuth({
     usePlural: false,
   }),
 
+  advanced: {
+    database: {
+      // Por defecto Better Auth genera sus propios ids (no son UUID), pero
+      // todas nuestras columnas `id` son `uuid` de Postgres. "uuid" hace que
+      // use `gen_random_uuid()` de la base de datos, igual que el resto del
+      // esquema (organizaciones, indicadores, documentos...).
+      generateId: "uuid",
+    },
+  },
+
   // El mapeo de cada modelo de Better Auth (user/session/account/verification)
   // a nuestra tabla y campos en español va aquí, no en el adaptador.
   user: {
