@@ -10,11 +10,6 @@ import { kpis, metaEsLimite, type Kpi } from "@/lib/demo-data";
 
 const PRIMERA_SEMANA = 36;
 
-/**
- * Franja de indicadores (pestañas) + gráfico de tendencia del seleccionado.
- * Un solo componente porque ambos comparten el estado "qué indicador está
- * activo" — docs/DESIGN.md v2 §4 "Franja de indicadores (patrón principal)".
- */
 export function IndicadoresConTendencia() {
   const [activoSlug, setActivoSlug] = React.useState<string>(kpis[0].slug);
   const activo = kpis.find((k) => k.slug === activoSlug) ?? kpis[0];

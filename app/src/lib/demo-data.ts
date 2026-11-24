@@ -1,14 +1,5 @@
-/**
- * Datos de ejemplo del piloto. Todo lo que se muestra en la interfaz sale de
- * aquí — ninguna cifra se escribe dos veces por separado, para que el
- * principio de "la IA nunca escribe cifras" sea cierto también en el código
- * de la maqueta. Empresa, documentos y cifras: 100% ficticios. Ver PRODUCT.md.
- *
- * Cuando exista la Fase 1 (tablero real), este archivo se reemplaza por
- * consultas a `getDb()` sobre el esquema de `src/db/schema`, pero la forma
- * de los datos (los mismos campos) se mantiene para no rehacer la interfaz.
- */
-
+// Única fuente de los datos de ejemplo del piloto. La Fase 1 reemplaza este
+// archivo por consultas a getDb() manteniendo la misma forma de datos.
 export const area = {
   nombre: "Operaciones",
   usuario: "Carlos",
@@ -36,8 +27,7 @@ export interface Kpi {
   estado: Estado;
   valorActual: number;
   caption: string;
-  serie: number[]; // últimas 12 semanas, semana 36 a 47
-  /** Serie más larga opcional (26 semanas) para el selector de periodo en el detalle. */
+  serie: number[];
   serie26?: number[];
   tendencia: {
     titulo: string;
@@ -130,13 +120,9 @@ export const kpis: Kpi[] = [
   },
 ];
 
-// El índice (eventos/semana) del KPI de seguridad usa un límite, no una
-// "meta" de incapacitantes-en-cero; para el gráfico de tendencia se maneja
-// con el mismo campo `meta` (aquí 1.5) y se etiqueta "Límite" en vez de "Meta".
 export const metaEsLimite: Record<string, boolean> = { seguridad: true };
 
 export const costoDesglose = {
-  /** Qué tanto aportó cada rubro al cambio del costo por onza esta semana (puntos, puede ser negativo). */
   explicacion: [
     { nombre: "Energía", puntos: 26 },
     { nombre: "Mantenimiento", puntos: 10 },
@@ -145,7 +131,6 @@ export const costoDesglose = {
     { nombre: "Insumos y explosivos", puntos: -4 },
   ],
   energiaExplicaPct: 62,
-  /** USD por onza de cada rubro, semana 47. */
   partes: [
     { nombre: "Energía", valor: 312 },
     { nombre: "Personal", valor: 298 },
@@ -285,7 +270,6 @@ export interface DocCita {
 export interface PreguntaDemo {
   id: string;
   pregunta: string;
-  /** null => no se encontró respuesta */
   respuesta: { texto: string; citas: string[] }[] | null;
   sugerenciaNoEncontrada?: { documento: string; pagina: number };
   citas: DocCita[];

@@ -5,12 +5,7 @@ import { ChevronLeft, ChevronRight, ExternalLink, File, Search, SearchX, Send, U
 import { cn, formatDate } from "@/lib/utils";
 import { documentos, preguntasDemo, preguntasSugeridas, type DocCita } from "@/lib/demo-data";
 
-/**
- * Demo del buscador: las preguntas de ejemplo son fijas (no hay IA de
- * verdad corriendo en el piloto todavía — eso es la Fase 3), pero las citas
- * SÍ son interactivas: al hacer clic en una, el visor de la derecha cambia
- * al documento y la página exactos, con el pasaje resaltado.
- */
+// Preguntas fijas de ejemplo: la búsqueda real con IA es la Fase 3, pendiente.
 export function BuscadorDemo() {
   const todasLasCitas = React.useMemo(() => {
     const mapa = new Map<string, DocCita>();

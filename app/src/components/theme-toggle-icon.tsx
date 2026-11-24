@@ -4,10 +4,6 @@ import { useTheme } from "next-themes";
 import { Moon, Sun } from "lucide-react";
 import { useHaMontado } from "@/lib/use-ha-montado";
 
-/**
- * Versión compacta del selector de tema para espacios chicos (celular),
- * donde la barra lateral con el control segmentado no se muestra.
- */
 export function ThemeToggleIcon({ className }: { className?: string }) {
   const { resolvedTheme, setTheme } = useTheme();
   const montado = useHaMontado();

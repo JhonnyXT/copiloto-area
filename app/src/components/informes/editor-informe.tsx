@@ -6,11 +6,6 @@ import { StatusChip } from "@/components/ui/status-chip";
 import { cn } from "@/lib/utils";
 import { informeSemanal } from "@/lib/demo-data";
 
-/**
- * Editor del informe: las secciones se pueden activar/desactivar de verdad
- * (estado de React, no un mockup). El contador de "cifras verificadas" se
- * recalcula según qué secciones están activas — nunca es un número fijo.
- */
 export function EditorInforme() {
   const [activas, setActivas] = React.useState<Record<string, boolean>>(() =>
     Object.fromEntries(informeSemanal.secciones.map((s) => [s.id, s.activaPorDefecto])),

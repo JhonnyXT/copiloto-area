@@ -8,7 +8,6 @@ import { area } from "@/lib/demo-data";
 export function Topbar({ ruta }: { ruta: { label: string; href?: string }[] }) {
   return (
     <header className="flex h-14 shrink-0 flex-nowrap items-center gap-3 border-b border-border bg-surface px-4 md:gap-4 md:px-7">
-      {/* En celular la barra inferior ya marca la sección activa; la ruta solo se muestra desde md. */}
       <nav aria-label="Ruta" className="hidden shrink-0 items-center gap-1.5 text-[13px] text-fg-3 md:flex">
         {ruta.map((paso, i) => (
           <span key={paso.label} className="flex items-center gap-1.5">

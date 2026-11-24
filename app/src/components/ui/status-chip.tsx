@@ -20,9 +20,6 @@ const textoPorDefecto: Record<Estado, string> = {
   risk: "En riesgo",
 };
 
-/**
- * Insignia de estado: icono + texto, nunca solo color — docs/DESIGN.md v2 §4.
- */
 export function StatusChip({
   estado,
   children,

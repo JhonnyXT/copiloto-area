@@ -5,10 +5,6 @@ import { Moon, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useHaMontado } from "@/lib/use-ha-montado";
 
-/**
- * Control segmentado Claro | Oscuro — nunca un botón que alterna a ciegas,
- * el estado actual siempre se ve. docs/DESIGN.md v2 §4.
- */
 export function ThemeToggle({ className }: { className?: string }) {
   const { resolvedTheme, setTheme } = useTheme();
   const montado = useHaMontado();

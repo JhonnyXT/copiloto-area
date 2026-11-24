@@ -5,7 +5,6 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-/** Formato numérico colombiano: miles con punto, decimales con coma. */
 export function formatNumber(value: number, decimals = 0) {
   return new Intl.NumberFormat("es-CO", {
     minimumFractionDigits: decimals,
@@ -31,7 +30,6 @@ export function formatDateTime(iso: string) {
   }).format(new Date(iso));
 }
 
-/** Diferencia con signo (+ / −), formateada en es-CO. Para "+2,7 %", "−0,2", etc. */
 export function formatSigned(value: number, decimals = 0, suffix = "") {
   const signo = value > 0 ? "+" : value < 0 ? "−" : "";
   return `${signo}${formatNumber(Math.abs(value), decimals)}${suffix}`;

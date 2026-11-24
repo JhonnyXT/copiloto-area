@@ -30,6 +30,24 @@ contenido es ficticio** — ningún dato real de la empresa entra nunca a este r
 El VPS Contabo + Hono + Cloudflare (`CONTEXTO.md` §7-ter) es la arquitectura del **sistema propio**,
 solo si el cliente confirma que lo quiere y lo paga. No se toca para el piloto.
 
+## Calidad de código (no negociable)
+- **Código limpio y legible por sí mismo.** Nombres (de variables, funciones, archivos) que dicen
+  qué hacen; funciones cortas con una sola responsabilidad; sin anidamientos ni condicionales
+  innecesarios.
+- **Clean Architecture / separación de capas:** UI (componentes) no conoce la base de datos
+  directamente; el esquema (`src/db/schema`) no conoce la UI; `lib/` son utilidades puras sin
+  estado de React. Un módulo se reemplaza sin tocar los demás (ver `src/lib/demo-data.ts`, pensado
+  para cambiarse entero por consultas reales sin tocar las pantallas).
+- **Principios SOLID** al diseñar funciones y componentes: una razón para cambiar por pieza,
+  extensión sin modificar lo existente, interfaces pequeñas y específicas.
+- **Sin comentarios explicativos de "qué hace" el código** — si hace falta un comentario para
+  explicar qué hace una línea, se reescribe esa línea (mejor nombre, función más chica) en vez de
+  comentarla. **Única excepción:** una nota corta y puntual sobre algo que el código no puede decir
+  por sí mismo — un comportamiento no obvio de una librería externa, un requisito de seguridad, o
+  una decisión que alguien podría deshacer por error sin saber por qué existe. Esas excepciones
+  deben ser pocas y cortas, nunca narrar el código línea por línea.
+- Antes de agregar código nuevo, revisar que siga este mismo criterio que el resto del proyecto.
+
 ## Cómo trabajar aquí
 - El diseño vive primero en el lienzo de Claude (Artifact) antes que en código; `docs/DESIGN.md` es
   la fuente escrita una vez que el diseño se aprueba ahí.

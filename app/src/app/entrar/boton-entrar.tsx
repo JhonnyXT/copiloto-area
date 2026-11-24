@@ -10,10 +10,6 @@ export function BotonEntrarConGoogle() {
   const params = useSearchParams();
   const destino = params.get("desde") || "/";
 
-  // El error de "correo no autorizado" se lanza en el servidor, al final
-  // del ida-y-vuelta con Google, no en esta llamada — por eso llega como
-  // parámetro de la URL de regreso (errorCallbackURL) y se deriva aquí
-  // directamente del render, sin un efecto.
   const error = params.get("error")
     ? "Este correo no está autorizado para entrar al piloto. Si crees que deberías tener acceso, contacta al administrador."
     : errorLocal;

@@ -44,9 +44,6 @@ export function CommandPalette({ className }: { className?: string }) {
     ? items.filter((i) => i.label.toLowerCase().includes(query.trim().toLowerCase()))
     : items;
 
-  // Reiniciar la pregunta y enfocar el campo al abrir: se dispara desde el
-  // propio evento de apertura (botón, atajo de teclado o Radix), nunca desde
-  // un efecto — así no hay un setState síncrono dentro de un efecto.
   function manejarCambioAbierto(nuevo: boolean) {
     setAbierto(nuevo);
     if (nuevo) {
@@ -64,9 +61,6 @@ export function CommandPalette({ className }: { className?: string }) {
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-    // Se vuelve a enganchar en cada cambio de `abierto` para que el atajo
-    // siempre alterne el estado correcto; es un solo listener global y
-    // barato de recrear.
   }, [abierto]);
 
   function ir(href: string) {

@@ -8,25 +8,17 @@ const PAD_TOP = 14;
 const PAD_BOTTOM = 14;
 
 interface TrendChartProps {
-  /** Un valor por semana, en orden (la última es la semana actual). */
   serie: number[];
   meta: number;
   metaEsLimite?: boolean;
   unidad: string;
   decimales?: number;
-  /** true si un valor más alto es mejor (producción); false si menos es mejor (costo, riesgo). */
   mayorEsMejor: boolean;
-  /** Número de la primera semana de la serie, para las etiquetas del tooltip y el eje X. */
   primeraSemana: number;
   height?: number;
   className?: string;
 }
 
-/**
- * Línea + área con degradado + meta punteada + tooltip real al pasar el
- * mouse o el foco del teclado por una columna invisible encima de cada
- * punto. Un punto = una semana. docs/DESIGN.md v2 §4.
- */
 export function TrendChart({
   serie,
   meta,

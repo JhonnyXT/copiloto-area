@@ -4,46 +4,30 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { getDb } from "@/db";
 import * as schema from "@/db/schema";
 
-/**
- * El piloto es de una sola organización ("Operaciones"). Esta función la
- * trae o la crea la primera vez que alguien entra — así `usuarios.organizacion_id`
- * (NOT NULL, pensado para cuando haya multiusuario) siempre tiene un valor
- * válido sin que Better Auth tenga que saber nada de organizaciones.
- */
 async function obtenerOrganizacionPiloto(): Promise<string> {
   const db = getDb();
-  const existente = await db.query.organizaciones.findFirst();
-  if (existente) return existente.id;
+  const organizacionExistente = await db.query.organizaciones.findFirst();
+  if (organizacionExistente) return organizacionExistente.id;
 
-  const [creada] = await db
+  const [organizacionCreada] = await db
     .insert(schema.organizaciones)
     .values({ nombre: "Operaciones (piloto)", esDatosDeEjemplo: true })
     .returning({ id: schema.organizaciones.id });
-  return creada.id;
+  return organizacionCreada.id;
 }
 
-/**
- * Lista cerrada de correos permitidos — requisito no negociable del
- * proyecto (CONTEXTO.md §10): "registro cerrado, lista de correos
- * permitidos". No hay registro abierto; quien no esté aquí nunca entra,
- * así tenga una cuenta de Google válida.
- *
- * `CORREOS_PERMITIDOS` es una variable de entorno (lista separada por
- * comas) para poder agregar a alguien sin tocar código ni volver a
- * desplegar — solo la variable en Vercel.
- */
-function correosPermitidos(): string[] {
-  const lista = process.env.CORREOS_PERMITIDOS ?? "";
-  return lista
+function obtenerCorreosPermitidos(): string[] {
+  return (process.env.CORREOS_PERMITIDOS ?? "")
     .split(",")
-    .map((c) => c.trim().toLowerCase())
+    .map((correo) => correo.trim().toLowerCase())
     .filter(Boolean);
 }
 
+function esCorreoPermitido(correo: string): boolean {
+  return obtenerCorreosPermitidos().includes(correo.toLowerCase());
+}
+
 export const auth = betterAuth({
-  // Nuestras tablas ya tienen los nombres (organizaciones, usuarios,
-  // sesiones, cuentas_oauth, verificaciones) con `casing: "snake_case"` —
-  // el adaptador solo necesita el esquema de Drizzle en sí.
   database: drizzleAdapter(getDb(), {
     provider: "pg",
     schema,
@@ -52,16 +36,10 @@ export const auth = betterAuth({
 
   advanced: {
     database: {
-      // Por defecto Better Auth genera sus propios ids (no son UUID), pero
-      // todas nuestras columnas `id` son `uuid` de Postgres. "uuid" hace que
-      // use `gen_random_uuid()` de la base de datos, igual que el resto del
-      // esquema (organizaciones, indicadores, documentos...).
       generateId: "uuid",
     },
   },
 
-  // El mapeo de cada modelo de Better Auth (user/session/account/verification)
-  // a nuestra tabla y campos en español va aquí, no en el adaptador.
   user: {
     modelName: "usuarios",
     fields: {
@@ -73,14 +51,9 @@ export const auth = betterAuth({
       updatedAt: "actualizadoEn",
     },
     additionalFields: {
-      // NOT NULL en la base de datos; nunca lo manda el cliente (input:
-      // false) — lo resuelve el hook de abajo con obtenerOrganizacionPiloto().
-      // required:false aquí a propósito: Better Auth valida los campos
-      // "required" ANTES de llamar al hook `before` de abajo (que es donde
-      // de verdad se rellena) — si quedaba en true, siempre fallaba con
-      // "organizacionId is required" sin llegar nunca al hook. La columna
-      // en la base de datos sigue siendo NOT NULL; el hook es quien
-      // garantiza un valor real antes de insertar.
+      // required:false a propósito: Better Auth valida los campos "required"
+      // antes de ejecutar databaseHooks.user.create.before, que es donde se
+      // rellena de verdad — con required:true nunca llega a ese hook.
       organizacionId: { type: "string", required: false, input: false },
       rol: { type: "string", required: false, defaultValue: "lider_area" },
     },
@@ -95,8 +68,6 @@ export const auth = betterAuth({
       createdAt: "creadoEn",
       updatedAt: "actualizadoEn",
     },
-    // Cookie firmada: la mayoría de llamadas a getSession() no golpean la
-    // base de datos — recomendado para Vercel Fluid Compute.
     cookieCache: { enabled: true, maxAge: 5 * 60 },
   },
   account: {
@@ -127,9 +98,6 @@ export const auth = betterAuth({
     },
   },
 
-  // Solo Google. Nada de correo/contraseña: menos superficie de ataque y
-  // coincide con la decisión ya tomada (CONTEXTO.md §10, "OAuth/OIDC vía
-  // Better Auth, nada a mano").
   socialProviders: {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID ?? "",
@@ -137,14 +105,11 @@ export const auth = betterAuth({
     },
   },
 
-  // Registro cerrado: si el correo de Google no está en la lista permitida,
-  // el login se rechaza aquí — antes de crear usuario o sesión.
   databaseHooks: {
     user: {
       create: {
         before: async (user) => {
-          const permitidos = correosPermitidos();
-          if (permitidos.length > 0 && !permitidos.includes(user.email.toLowerCase())) {
+          if (!esCorreoPermitido(user.email)) {
             throw new Error("Este correo no está autorizado para entrar al piloto.");
           }
           const organizacionId = await obtenerOrganizacionPiloto();
@@ -154,5 +119,7 @@ export const auth = betterAuth({
     },
   },
 
-  plugins: [nextCookies()], // debe ir de último: pone las cookies desde Server Actions
+  // nextCookies() debe ir de último en la lista para poder poner las
+  // cookies de sesión desde Server Actions.
+  plugins: [nextCookies()],
 });

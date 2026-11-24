@@ -7,11 +7,6 @@ const colorRelleno: Record<Estado, string> = {
   risk: "bg-risk",
 };
 
-/**
- * Barra de avance contra la meta: el relleno es el valor actual (escalado a
- * un máximo cómodo) y la marca vertical es la meta. Nunca comunica el
- * estado solo con el color: siempre va junto a un StatusChip con icono+texto.
- */
 export function ProgressBullet({
   valor,
   meta,
