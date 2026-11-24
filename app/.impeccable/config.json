@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "inter",
+        "createdAt": "2026-11-24T02:26:36.934Z",
+        "reason": "Jonathan/PRODUCT.md: Operate-mode B2B dashboard for its one pilot user, a non-technical user viewing it on short notice; a workhorse system face serves legibility and trust better than a distinctive display face here, per craft-floor's Operate/Read guidance"
+      }
+    ]
+  }
+}
