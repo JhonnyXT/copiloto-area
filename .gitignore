@@ -30,3 +30,8 @@ app/.impeccable/hook.cache.json
 CONTEXTO.md
 PRODUCT.md
 docs/plan-negocio.md
+
+# Playwright
+app/test-results/
+app/playwright-report/
+app/blob-report/

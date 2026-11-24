@@ -30,34 +30,30 @@ que instalar en un servidor, nada de Caddy ni Cloudflare proxy.
 
 **Infraestructura Vercel (reemplaza al VPS para el piloto)**
 - [x] Proyecto Vercel enlazado (`copiloto-area-ferney`).
-- [ ] **Neon Postgres + pgvector**, vía `vercel install neon` (Marketplace) — requiere que Jonathan
-  confirme el aprovisionamiento (crea una cuenta/recurso externo real, no algo que se haga sin su
-  visto bueno).
-- [ ] **Vercel Blob**, vía `vercel storage create --type blob` — para Excel/CSV subidos y los PDFs
-  de ejemplo.
-- [ ] `vercel env pull` para traer las variables al proyecto local.
+- [x] **Neon Postgres + pgvector** provisionado y conectado (extensión 0.8.7 habilitada).
+- [x] **Vercel Blob** privado provisionado y conectado (`copiloto-area-files`).
+- [x] `vercel env pull` hecho (`app/.env.local`, no se sube al repo).
 - [ ] Dominio: `copiloto.joblanstudio.com` apuntando al proyecto de Vercel (DNS en Cloudflare, pero
   solo el registro CNAME/A hacia Vercel — sin proxy naranja ni R2, eso es del sistema propio).
 
 **Frontend (Next.js, en `app/`)**
-- [ ] Traducir las 7 pantallas del lienzo aprobado a código real: layout (barra lateral, barra
-  superior, franja de datos de ejemplo), tema claro/oscuro con `next-themes`, los componentes base
-  (tarjeta, chip de estado, botón, gráfico de tendencia con tooltip, franja de indicadores).
-- [ ] Capa de datos de ejemplo en código (`lib/demo-data.ts`), una sola fuente de verdad para que
-  ninguna cifra se escriba dos veces distinto — ya tengo un primer borrador de la sesión anterior,
-  se revisa contra el diseño v2.
-- [ ] Pruebas con Playwright: carga de cada pantalla, el selector de tema persiste, la pestaña de
-  indicador cambia el gráfico, los interruptores de sección del informe funcionan, una cita del
-  buscador abre el documento en la página correcta.
-- [ ] Desplegar a Vercel (preview) para que se pueda ver desde cualquier lado.
+- [x] Traducido el diseño v2 del lienzo a código real: layout (barra lateral, barra superior con
+  buscador y selector de tema compacto en celular, franja de datos de ejemplo), tema claro/oscuro
+  con `next-themes` (persiste y funciona en escritorio y celular), componentes base (chip de
+  estado, botón, gráfico de tendencia con tooltip interactivo, franja de indicadores con pestañas,
+  barra de avance contra la meta).
+- [x] Las 4 pantallas: Resumen, Detalle de indicador (con desglose de costo y selector 12/26
+  semanas), Informe (secciones que se activan/desactivan de verdad, cifras resaltadas con su
+  origen), Documentos (citas que abren el documento en la página exacta, caso "no encontré esto").
+- [x] `lib/demo-data.ts` es la única fuente de las cifras de ejemplo.
+- [x] Pruebas con Playwright (`npx playwright test`, 25 pasan, 1 se salta a propósito en celular):
+  carga de cada pantalla, navegación, tema persiste tras recargar, pestaña de indicador cambia el
+  gráfico, interruptores del informe recalculan las cifras verificadas, cita del buscador abre el
+  documento en la página correcta, caso sin respuesta.
+- [ ] Desplegar a Vercel (preview).
 
-**Esquema de base de datos (bloquea el trabajo en paralelo de la Fase 1-3 — se define antes)**
-- [ ] Tablas: `indicadores`, `mediciones` (valor + periodo + meta), `documentos`,
-  `fragmentos_documento` (con su vector pgvector), `informes`, `auditoria`. `usuarios` con un solo
-  registro (el cliente) por ahora.
-- [ ] `org_id` en cada tabla desde el día 1 aunque el piloto tenga una sola organización — así el
-  esquema se reutiliza si el sistema propio necesita multiusuario después.
-- [ ] Drizzle ORM (`drizzle-orm/neon-http`) + migraciones versionadas.
+**Esquema de base de datos** — hecho, ver `app/src/db/schema/` y el commit "Esquema de base de
+datos (Drizzle), en español, aplicado a Neon". 10 tablas, migración aplicada, índice HNSW creado.
 
 **Auth**
 - [ ] Better Auth **dentro de Next.js** (Route Handlers, sin servidor Hono aparte), login con
